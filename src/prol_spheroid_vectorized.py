@@ -4,7 +4,7 @@ import subprocess
 import os
 import csv
 from scipy.special import lpmn
-
+import platform
 
 from funcs.FUNC_read_fortran_output_vectorized import func_Rad_SWF_ArgExp, func_dr_values_ArgExp, \
     func_Smn_eta_c_from_dr_ArgExp, Multi_ArgExp, Sum_ArgExp, Get_ArgExp, func_Integrate_SmnEta1_SmlEta2_ArgExp, \
@@ -16,6 +16,7 @@ from funcs.FUNC_read_fortran_output_vectorized import func_Rad_SWF_ArgExp, func_
 # The spherical Hankel function of the first kind h1_n(z) is defined by:
 #    h1_n(z)=j_n(z)+i*y_n(z)
 # where j_n(z) and y_n(z) are the spherical Bessel functions of the first and second kinds.
+
 
 
 class ProlateSpheroid:
@@ -40,6 +41,8 @@ class ProlateSpheroid:
 
         self.solver = solver
         self.precision_fbs = settings.precision_fbs
+        system = platform.system()
+        self.python_exe = 'python' if system == 'Windows' else 'python3'
 
 
     def run(self, ts_file_name):
@@ -126,7 +129,7 @@ class ProlateSpheroid:
         script_path1 = os.path.join(ParentDIR, 'src', 'Run_param_fort_FromPython.py')
         print(script_path1)
         # Run Python Script:
-        subprocess.run(['python3', script_path1], capture_output=True, text=True)
+        subprocess.run([self.python_exe, script_path1], capture_output=True, text=True)
         #>>>>>>>>>
         #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
         #|||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
@@ -174,7 +177,7 @@ class ProlateSpheroid:
             
             #print(script_path)
             # Run Fortran:
-            subprocess.run(['python3', script_path], capture_output=True, text=True)
+            subprocess.run([self.python_exe, script_path], capture_output=True, text=True)
             #>>>>>>>>>
 
             content_Rad_SWF_hs=infunc_content_Rad_SWF(ParentDIR)
@@ -191,7 +194,7 @@ class ProlateSpheroid:
 
 
             # Run Fortran:
-            subprocess.run(['python3', script_path], capture_output=True, text=True)
+            subprocess.run([self.python_exe, script_path], capture_output=True, text=True)
             #>>>>>>>>>
             content_Rad_SWF_hw=infunc_content_Rad_SWF(ParentDIR)
             #    content_Ang_SWF_hw=infunc_content_Ang_SWF()
@@ -273,7 +276,7 @@ class ProlateSpheroid:
         script_path1 = ParentDIR+'/src/'+'Run_param_fort_FromPython.py'
         print(script_path1)
         # Run Python Script:
-        subprocess.run(['python3', script_path1], capture_output=True, text=True)
+        subprocess.run([self.python_exe, script_path1], capture_output=True, text=True)
 
         f = freq_Hz
 
@@ -309,7 +312,7 @@ class ProlateSpheroid:
         script_path = ParentDIR+'/src/'+'Run_profcn_II_fort_FromPython.py'
         print(script_path)
         # Run Fortran:
-        subprocess.run(['python3', script_path], capture_output=True, text=True)
+        subprocess.run([self.python_exe, script_path], capture_output=True, text=True)
         #>>>>>>>>>
 
         content_Rad_SWF_hs=infunc_content_Rad_SWF(ParentDIR)
@@ -323,7 +326,7 @@ class ProlateSpheroid:
         write_Inputfile(c_nondimensional,self.AspRatio,M_order_Fortran,N_order_Fortran,Theta_IncDeg, ParentDIR)
 
         # Run Fortran:
-        subprocess.run(['python3', script_path], capture_output=True, text=True)
+        subprocess.run([self.python_exe, script_path], capture_output=True, text=True)
         #>>>>>>>>>
         content_Rad_SWF_hw=infunc_content_Rad_SWF(ParentDIR)
         #    content_Ang_SWF_hw=infunc_content_Ang_SWF()
