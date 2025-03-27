@@ -28,7 +28,7 @@ class HerringSettings:
         self.precision_fbs = 1e-6
 
 
-def createSettings(fish_length, depth, incident_angle):
+def createSettings(fish_length, depth, incidence_angle):
     a = fish_length * 0.26 * 0.5
     b_0 = 0.01 * 0.5 # from Gorska & Ona - todo: maybe it also should be varied with length?
     b = b_0 * (1 + depth/10)**(-0.5)
@@ -37,25 +37,26 @@ def createSettings(fish_length, depth, incident_angle):
     # adjust ro_s to be approx 14 kg/m^3 at 100 m depth
     ro_s_0 = 0.00129 * ro_w  # density at 0m
     ro_s_100 = 14            # density at 100m
-    ro_s = ro_s_0 * (1 + depth * (ro_s_100 - ro_s_0) / (ro_s_0 * 100))
+    #ro_s = ro_s_0 * (1 + depth * (ro_s_100 - ro_s_0) / (ro_s_0 * 100))
+    ro_s = (b_0**2)/(b**2)*ro_s_0
     c_w = 1500               # sound speed in water
     c_s = 0.23 * c_w         # the sound speed is assumed not to depend on depth
-    return HerringSettings('herring', ro_s, c_s, a, b, 1000, 1000, 260000, incident_angle)
+    return HerringSettings('herring', ro_s, c_s, a, b, 1000, 1000, 260000, incidence_angle)
 
 
 if __name__ == '__main__':
     # if the path to the gfortran compiler is not already in the PATH environment variable, it can be added here
     os.environ['PATH'] += os.pathsep + os.path.abspath(r'C:\bin\mingw64\bin')
 
-    fish_lengths = [0.15, 0.25]
-    incidence_angles = [90, 82, 75]
+    fish_lengths = [0.10, 0.30]
+    incidence_angles = [90, 82, 75] # [90, 88, 86, 84, 82, 75] # [90, 82, 75]
     depths = [10, 50, 100]
 
-    for incident_angle in incidence_angles:
+    for incidence_angle in incidence_angles:
         for fish_length in fish_lengths:
             for depth in depths:
-                print('Running with length {}, incident angle {}, and depth {}'.format(fish_length, incident_angle, depth))
-                herring_settings = createSettings(fish_length, depth, incident_angle)
+                print('Running with length {}, incidence angle {}, and depth {}'.format(fish_length, incidence_angle, depth))
+                herring_settings = createSettings(fish_length, depth, incidence_angle)
                 #solver = BiCGSTABSolver('ILU')
                 solver = IterativeRefinement('LU')
                 ts_file_name = 'ts_vs_freq_loop_{}_a_{}_b_{}_f1_{}_f2_{}_rhos_{:.2f}_IncAngle_{}_depth_{}_length_{}_{}.csv'.format(herring_settings.prefix,
