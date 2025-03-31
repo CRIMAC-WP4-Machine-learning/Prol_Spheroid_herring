@@ -27,6 +27,32 @@ class HerringSettings:
         # precision
         self.precision_fbs = 1e-6
 
+def func_VanDerWaals_Air(P_pa,T_celsius):
+    import numpy as np
+    # Van Der Waals eqution from "Thermodynamics - An Engineering Approach, Cengel & Boles 2014" Eq 3-22
+    # where "a" and "b" are estimated from 3-23
+    
+    T=273+T_celsius 
+    R=0.2870
+    
+    # Critical values for Oxygen:
+    T_cr=132.5 # "Kelvin" Critical temperature
+    P_cr=3.77E6 # "Pa" Critical pressure
+    #V_cr=0.0780 # m³/kmol  Critical per unit kmol
+    
+    a=27*R*R*T_cr*T_cr/(64*P_cr)
+    b=R*T_cr/(8*P_cr)
+    
+    # Av³+Bv²+Cv+D=0
+    A=P_pa
+    B=-P_pa*b-R*T
+    C=a
+    D=-a*b
+    
+    v_vec=np.roots([A,B,C,D])
+    
+    Ro=0.001*1/np.real(v_vec[0])
+    return Ro
 
 def createSettings(fish_length, depth, incidence_angle):
     a = fish_length * 0.26 * 0.5
@@ -35,10 +61,11 @@ def createSettings(fish_length, depth, incidence_angle):
 
     ro_w = 1027              # density of water
     # adjust ro_s to be approx 14 kg/m^3 at 100 m depth
-    ro_s_0 = 0.00129 * ro_w  # density at 0m
-    ro_s_100 = 14            # density at 100m
+    P_pa = 1e5 + ro_w*depth*9.81
+    # ro_s_0 = 0.00129 * ro_w  # density at 0m
+    # ro*_s_100 = 14            # density at 100m
     #ro_s = ro_s_0 * (1 + depth * (ro_s_100 - ro_s_0) / (ro_s_0 * 100))
-    ro_s = (b_0**2)/(b**2)*ro_s_0
+    ro_s = func_VanDerWaals_Air(P_pa, 15) #(b_0**2)/(b**2)*ro_s_0
     c_w = 1500               # sound speed in water
     c_s = 0.23 * c_w         # the sound speed is assumed not to depend on depth
     return HerringSettings('herring', ro_s, c_s, a, b, 1000, 1000, 260000, incidence_angle)
