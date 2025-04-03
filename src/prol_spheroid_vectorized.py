@@ -50,7 +50,7 @@ class ProlateSpheroid:
         freq_resp_file = os.path.join(ParentDIR, 'temp', ts_file_name)
         frf = open(freq_resp_file, 'wt', newline='', encoding='utf-8')
         freq_resp_writer = csv.writer(frf, delimiter=',')
-        freq_resp_writer.writerow(['Freq_kHz', 'TS'])
+        freq_resp_writer.writerow(['Freq_kHz', 'TS', 'f_bs'])
 
         #%% Write profcn.dat file
         '''
@@ -249,7 +249,7 @@ class ProlateSpheroid:
                 last_f_bs = f_bm
 
             f_b=np.append(f_b,f_b_sum)
-            freq_resp_writer.writerow(['{:.2f}'.format(f/1000), np.float64(20*np.log10(np.abs(f_b_sum)))])
+            freq_resp_writer.writerow(['{:.2f}'.format(f/1000), np.float64(20*np.log10(np.abs(f_b_sum))), f_b_sum])
             frf.flush()
 
             print('freq:',f,' of',self.max_freq,' TS: ',20*np.log10(np.abs(f_b_sum)))
