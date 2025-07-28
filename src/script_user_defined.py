@@ -9,24 +9,24 @@ class UserDefinedSettings:
         self.prefix = 'user'        # just a name to identify the output files
         # media properties
         self.ro_w = 1027            # the density of the surrounding media [kg/m^3]
-        self.ro_s = 10            # the density of the spheroid [kg/m^3]
+        self.ro_s = 2.78            # the density of the spheroid [kg/m^3]
         self.c_w = 1500             # the sound speed in the surrounding media [m/s]
         self.c_s = 343             # the sound speed in the spheroid [m/s]
 
         # geometrical properties
-        self.a = 0.03               # the length of the semi-major axis [m]
-        self.b = 0.01               # the length of the semi-minor axis [m]
+        self.a = 0.0407               # the length of the semi-major axis [m]
+        self.b = 0.0039               # the length of the semi-minor axis [m]
 
         # frequencies
-        self.delta_f = 1000         # the distance between frequencies [Hz]
-        self.min_freq = 38000       # the start frequency [Hz]
-        self.max_freq = 300100       # the end frequency [Hz]
+        self.delta_f = 8000         # the distance between frequencies [Hz]
+        self.min_freq = 2000       # the start frequency [Hz]
+        self.max_freq = 260100       # the end frequency [Hz]
 
         #incident angle
-        self.theta_i_deg = 5       # the incidence angle [degrees]
+        self.theta_i_deg = 90       # the incidence angle [degrees]
 
         # precision
-        self.precision_fbs = 1e-5
+        self.precision_fbs = 1e-6
 
 
 if __name__ == '__main__':
