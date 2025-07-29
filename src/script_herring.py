@@ -75,9 +75,9 @@ if __name__ == '__main__':
     # if the path to the gfortran compiler is not already in the PATH environment variable, it can be added here
     os.environ['PATH'] += os.pathsep + os.path.abspath(r'C:\bin\mingw64\bin')
 
-    fish_lengths = [0.10, 0.30]
-    incidence_angles = [90, 82, 75] # [90, 88, 86, 84, 82, 75] # [90, 82, 75]
-    depths = [10, 50, 100]
+    fish_lengths = [0.30] # [0.10, 0.30]
+    incidence_angles = [47, 48, 49, 50, 51] # [90, 88, 86, 84, 82, 75] # [90, 82, 75]
+    depths = [50] #[10, 50, 100]
 
     for incidence_angle in incidence_angles:
         for fish_length in fish_lengths:
