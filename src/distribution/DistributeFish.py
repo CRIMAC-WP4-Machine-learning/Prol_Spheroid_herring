@@ -2,20 +2,37 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 import os
+import glob
+import pandas as pd
+import re
 
-# funcs -----------------------------------
+#%% funcs -----------------------------------
 def Get_Angle(_p0, _p1, _u_p1):
     ''' 
+    Returns the angle between a vector connecting p1 to p0 and the vector u_p1 originating from p1
     Inputs:
     _p0 = np.array([x0, y0, z0])  observation point (coordinate of echosounder)
     _p1 = np.array([x1, y1, z1])  location of fish (coordinate of fish)
     _u_p1 = np.array([1.0, 1.0, 0.0])  #  (orientation at p1, unit vector) Orientation of the fish
 
     Outputs:
+    
+    Example:
+    # ======================================================
+    # Angle between "u" the unit vector of point "p1" and vector connecting "p0" to "p1":
+    print('points[0], orientations[0]: ', points[0], orientations[0])
+
+    p0 = np.array([0.0, 0.0, 5.0]) 
+    p1 = np.array([0.0, 0.0, 0.0])
+    u_p1 = np.array([1.0, 0.0, 0.0])  # orientation at p1
+    Get_Angle(p0, p1, u_p1)
+
+    print('np.linalg.norm(p1-p0): ', np.linalg.norm(p1-p0))
     '''
     # _p0 = np.array([0.0, 0.0, 5.0]) 
     # _p1 = np.array([0.0, 0.0, 0.0])
     # _u_p1 = np.array([1.0, 1.0, 0.0])  # orientation at p1
+    
 
     _u_p1_norm = np.linalg.norm(_u_p1)  # unit vector (orientation at p1)
 
@@ -30,29 +47,188 @@ def Get_Angle(_p0, _p1, _u_p1):
         cos_theta = np.clip(cos_theta, -1.0, 1.0)
         theta_rad = np.arccos(cos_theta)
         theta_deg = np.degrees(theta_rad)
-        print(f"Angle: {theta_deg:.2f} degrees")
+        # print(f"Angle: {theta_deg:.2f} degrees")
     else:
         print("Warning: p0 and p1 are the same point.")
+    
+    Incident_Angle_deg = 90 - np.abs(90-theta_deg)
+    return Incident_Angle_deg
 
-def Read_file_from_database(Dir_database ,fish_lengh, depth, incident_angle):
+def Extract_database_metadata(_Dir):
+    '''
+    Reads all .csv files in _Dir and returns the metadata as dataframe including file names, a, b, depth, Incident angle, 
+    and lengths from filenames
+    '''
+    csv_files = glob.glob(os.path.join(_Dir, '*.csv'))
+
+    # Regex pattern to extract parameters from filename
+    pattern = r"a_(?P<a>[0-9.]+)_b_(?P<b>[0-9.]+).*?_IncAngle_(?P<IncAngle>[0-9.]+)_depth_(?P<depth>[0-9.]+)_length_(?P<length>[0-9.]+)"
+
+    # Collect data from filenames
+    records = []
+
+    for file in csv_files:
+        match = re.search(pattern, file)
+        if match:
+            record = {
+                'filename': os.path.basename(file),
+                'a': float(match.group('a')),
+                'b': float(match.group('b')),
+                'IncAngle': float(match.group('IncAngle')),
+                'depth': float(match.group('depth')),
+                'length': float(match.group('length'))
+            }
+            records.append(record)
+
+    # Create DataFrame
+    _df = pd.DataFrame(records)
+
+    # View it
+    # print(_df.head())
+
+    return _df
+
+def Find_closestfile_in_database(_df_database, _Depth,_Length, _IncAngl):
     '''
     reads the csv file for the corresponding fish length, at depth, and incident angle.
+    Outrput:
+    returns the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
     '''
-    
+        # Search within _df_dabase to find closest row to _Depth,_Length, _IncAngl:
+    # Step 1: Closest depth
+    _df_database['depth_diff'] = np.abs(_df_database['depth'] - _Depth)
+    min_depth_diff = _df_database['depth_diff'].min()
+    depth_filtered = _df_database[_df_database['depth_diff'] == min_depth_diff].copy()
 
-# funcs -----------------------------------
+    # Step 2: Closest length that is >= _Length
+    larger_or_equal = depth_filtered[depth_filtered['length'] >= _Length]
+
+    if not larger_or_equal.empty:
+        # Choose the smallest such length
+        selected_length = larger_or_equal['length'].min()
+        length_filtered = larger_or_equal[larger_or_equal['length'] == selected_length]
+    else:
+        # Fallback: no length >= _Length, so pick the overall closest one
+        depth_filtered['length_diff'] = np.abs(depth_filtered['length'] - _Length)
+        min_length_diff = depth_filtered['length_diff'].min()
+        length_filtered = depth_filtered[depth_filtered['length_diff'] == min_length_diff]
+
+    # Step 3: Closest IncAngle
+    length_filtered['angle_diff'] = np.abs(length_filtered['IncAngle'] - _IncAngl)
+    min_angle_diff = length_filtered['angle_diff'].min()
+    final_selection = length_filtered[length_filtered['angle_diff'] == min_angle_diff]
+    
+    # final_selection will contain the closest match(es)
+    df_closest_row = final_selection.iloc[0]  # just take the first if multiple
+    dict_closest_row = df_closest_row.to_dict()
+
+    return dict_closest_row
+
+
+def func_frq_TS_from_Dict(_Dir, _Inp_Dict, _Lfish, _f_vec):
+    # print('_Inp_Dict :', _Inp_Dict)
+    # print(os.path.join(_Dir, _Inp_Dict['filename']))
+    df_csv = pd.read_csv(os.path.join(_Dir, _Inp_Dict['filename']))
+    print(df_csv.columns)
+
+
+    L0 = _Inp_Dict['length']
+    
+    # print(' type(df_csv): ', type(df_csv))
+    freq_vec0 = df_csv['Freq_kHz']
+    TS_vec0 = df_csv['TS']
+    Fbs_vec0 = df_csv['f_bs']
+
+    # Ensure f_bs is complex. That is if f_bs is stored as string (e.g., "1+2j"), convert it to complex
+    if not np.iscomplexobj(Fbs_vec0):
+        Fbs_vec0 = Fbs_vec0.astype(complex)
+
+    ScaleFactor=(L0/_Lfish)**(1/3) # !!!!! Req0/Req = L0/_Lfish: Note that since in the current version, 
+                            #           "b" the minor axis of prolate spheroid is indepndent of L
+    plt.plot(freq_vec0, TS_vec0)
+    print('ScaleFactor: >>>>>>>>>>>>>>>>>>>>>>', ScaleFactor)
+    
+    def Func_rescale_TS(_t_vec, _Sig, _factor):
+        _t_vec = np.asarray(_t_vec)   # Convert pandas Series or list to ndarray
+        _t_vec = np.insert(_t_vec, 0, 0.0)        # Insert 0.0 at the beginning
+
+        _Sig = np.asarray(_Sig)  # Convert pandas Series or list to ndarray
+        _Sig = np.insert(_Sig, 0, 1E-200)        # Insert 0.0 at the beginning
+
+        Scaled_t = _factor * _t_vec
+        Sig_interpolated = np.interp(_f_vec, Scaled_t, _Sig)
+        ScaledSig = Sig_interpolated + 20 * np.log10(1 / _factor)
+
+        return _f_vec, ScaledSig
+    
+    def Func_rescale_Fbs(_t_vec, _Sig, _factor):
+        _t_vec = np.asarray(_t_vec)   # Convert pandas Series or list to ndarray
+        _t_vec = np.insert(_t_vec, 0, 0.0)        # Insert 0.0 at the beginning
+        _Sig = np.asarray(_Sig)
+        _Sig = np.insert(_Sig, 0, 1E-200)        # Insert 0.0 at the beginning
+
+        Scaled_t = _factor * _t_vec
+        Sig_interpolated = np.interp(_f_vec, Scaled_t, _Sig)
+        ScaledSig = Sig_interpolated  * 1/_factor
+
+        return ScaledSig
+
+    
+    [freq_vec, TS_vec] = Func_rescale_TS(freq_vec0, TS_vec0, ScaleFactor)
+    Real_f_bs = Func_rescale_Fbs(freq_vec0, np.real(Fbs_vec0), ScaleFactor)
+    Imag_f_bs = Func_rescale_Fbs(freq_vec0, np.imag(Fbs_vec0), ScaleFactor)
+    scaled_f_bs = Real_f_bs + 1j * Imag_f_bs
+
+    return freq_vec, TS_vec, scaled_f_bs
+        
+def plot_fish_school(_points, _orientations):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.quiver(_points[:, 0], _points[:, 1], _points[:, 2],
+            _orientations[:, 0], _orientations[:, 1], _orientations[:, 2],
+            length=0.3, normalize=True)
+
+    # Equal aspect ratio
+    max_range = np.array([
+        _points[:, 0].max() - _points[:, 0].min(),
+        _points[:, 1].max() - _points[:, 1].min(),
+        _points[:, 2].max() - _points[:, 2].min()
+    ]).max() / 2.0
+
+    mid_x = (_points[:, 0].max() + _points[:, 0].min()) * 0.5
+    mid_y = (_points[:, 1].max() + _points[:, 1].min()) * 0.5
+    mid_z = (_points[:, 2].max() + _points[:, 2].min()) * 0.5
+
+    ax.set_xlim(mid_x - max_range, mid_x + max_range)
+    ax.set_ylim(mid_y - max_range, mid_y + max_range)
+    ax.set_zlim(mid_z - max_range, mid_z + max_range)
+
+    plt.show()    
+
+
+#%% main part
+Observation_point = np.array([0, 0, 0]) # Echosounder location
 
 # Example: place N points (fish location) with no overlap in a prolate or oblate spheroid
 N = 100
 a, b = 2.0, 0.6  # spheroid axes
 points = []
 min_dist = 0.2
+Average_school_Depth = 50 # m
 
+# "Theta" is the angle of projected vector on XY plane and X axis
+theta_range = [0, np.pi/12]
+
+# "Phi" is the angle of vector and Z axis
+phi_range = [3*np.pi/12, 9*np.pi/12]
+
+
+# Create N points(x, y, z) with min_dist to avoid overlap:
 while len(points) < N:
-    x = np.random.uniform(-a, a)
+    x = np.random.uniform(-a, a) 
     y = np.random.uniform(-b, b)
-    z = np.random.uniform(-b, b)
-    if (x**2/a**2 + y**2/b**2 + z**2/b**2) <= 1:
+    z = np.random.uniform(-b, b) - Average_school_Depth
+    if (x**2/a**2 + y**2/b**2 + (z + Average_school_Depth)**2/b**2) <= 1:
         p = np.array([x, y, z])
         if all(np.linalg.norm(p - q) > min_dist for q in points):
             points.append(p)
@@ -60,15 +236,12 @@ while len(points) < N:
 points = np.array(points)
 
 
-
 # Random unit vectors: 
 # "Theta" is the angle of projected vector on XY plane and X axis
 # "Phi" is the angle of vector and Z axis
-N = len(points)  # or however many vectors you need
-
 # Generate arrays of theta and phi
-theta = np.random.uniform(0, np.pi/12, size=N)
-phi = np.random.uniform(np.pi/3, 2*np.pi/3, size=N)
+theta = np.random.uniform(theta_range[0], theta_range[1], size=len(points))
+phi = np.random.uniform(phi_range[0], phi_range[1], size=len(points))
 
 # Convert spherical to Cartesian coordinates
 x = np.sin(phi) * np.cos(theta)
@@ -78,39 +251,98 @@ z = np.cos(phi)
 orientations = np.stack((x, y, z), axis=1)  # shape (N, 3)
 orientations /= np.linalg.norm(orientations, axis=1)[:, np.newaxis]  # normalize
 
+print(orientations[0])
 
-# Plot
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.quiver(points[:, 0], points[:, 1], points[:, 2],
-          orientations[:, 0], orientations[:, 1], orientations[:, 2],
-          length=0.3, normalize=True)
+# Plot the fish school of N fish
+plot_fish_school(points, orientations)
 
-# Equal aspect ratio
-max_range = np.array([
-    points[:, 0].max() - points[:, 0].min(),
-    points[:, 1].max() - points[:, 1].min(),
-    points[:, 2].max() - points[:, 2].min()
-]).max() / 2.0
 
-mid_x = (points[:, 0].max() + points[:, 0].min()) * 0.5
-mid_y = (points[:, 1].max() + points[:, 1].min()) * 0.5
-mid_z = (points[:, 2].max() + points[:, 2].min()) * 0.5
+# # For a given point:
+# # Incident_Angle_deg:
+# # Angle between "u" the unit vector of point "p1" and vector connecting "p0" to "p1":
+# p0 = np.array([0.0, 0.0, 5.0]) 
+# p1 = np.array([-1.0, 0.0, 0.0])
+# u_p1 = np.array([1.0, 0.0, 0.0])  # orientation at p1
+# Incident_Angle_deg = Get_Angle(p0, p1, u_p1)
 
-ax.set_xlim(mid_x - max_range, mid_x + max_range)
-ax.set_ylim(mid_y - max_range, mid_y + max_range)
-ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
+
+#%%
+
+# 1. Get the directory where the script is located
+script_dir = os.path.dirname(os.path.abspath(__file__))
+# Change the current working directory to the script's directory
+os.chdir(script_dir)
+print(f"Current working directory changed to: {os.getcwd()}")
+
+# 2. Calculate the parent directory (navigates two directories up.)
+ParentDIR = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
+print('Parent DIR: >>> ', ParentDIR)
+
+# Database Directory containing csv files with TS(f) and F_bs(f):
+database_dir = os.path.join(ParentDIR, 'model_results','model_backscatter_results/')
+print('database_dir: ',database_dir)
+
+# Create database info from csv files in database_dir. df_database has filename, target (fish) length, incident angle, depth,
+#  prolate spheroid dimensions of swimblader "a, b", 
+df_database = Extract_database_metadata(database_dir)
+
+#====================================
+Depth = 50 
+Length = 0.3
+IncAngl = 90
+
+f_vec = np.arange(1, 260, 1)
+
+# # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
+target_dict = Find_closestfile_in_database(df_database, Depth, Length, IncAngl)
+print('target_dict: ', target_dict)
+L_fish = 0.15
+[freq_scaled, TS_scaled, scaled_f_bs] = func_frq_TS_from_Dict(database_dir, target_dict, L_fish, f_vec)
+# plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
+plt.plot(freq_scaled, TS_scaled, color = [1, 0, 0], dashes = [3,2], linewidth = 2)
+
+
+
+# Depth = 50 
+# Length = 0.2
+# IncAngl = 90
+
+# f_vec = np.arange(1, 260, 1)
+
+# # # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
+# target_dict = Find_closestfile_in_database(df_database, Depth, Length, IncAngl)
+# print('target_dict: ', target_dict)
+# L_fish = 0.2 
+# [freq_scaled, TS_scaled, scaled_f_bs] = func_frq_TS_from_Dict(database_dir, target_dict, L_fish, f_vec)
+# # plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [0, 0, 1], dashes = [3,2], linewidth = 2)
+# plt.plot(freq_scaled, TS_scaled, color = [0, 0, 1], dashes = [3,2], linewidth = 2)
+
+
+print('len(points): ', len(points))
+
+# for ii in range(0, len(points)):
+#     point_ii = points[ii]
+#     orientations_ii = orientations[ii]
+
+#     Incident_Angle_ii = Get_Angle(Observation_point, point_ii, orientations_ii)
+
+#     print('Incident_Angle_ii: ', Incident_Angle_ii)
+
+#     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
+#     target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
+    
+#     L_fish = 0.3 #m 
+#     [freq_scaled, TS_scaled, scaled_f_bs] = func_frq_TS_from_Dict(database_dir, target_dict, L_fish)
+#     plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
+
+
+# target_dict = Find_closestfile_in_database(df_database, Depth, Length, IncAngl)
+# print('target_dict:>>>>>>> ',target_dict)
+
+# L_fish = 0.15
+# [freq_scaled, TS_scaled, scaled_f_bs] = func_frq_TS_from_Dict(database_dir, target_dict, L_fish)
+
+# plt.plot(freq_scaled, TS_scaled, color = [0, 0, 0], dashes = [3,0], linewidth = 2)
+# plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
 plt.show()
-
-
- # ======================================================
-# Angle between "u" the unit vector of point "p1" and vector connecting "p0" to "p1":
-print('points[0], orientations[0]: ', points[0], orientations[0])
-
-p0 = np.array([0.0, 0.0, 5.0]) 
-p1 = np.array([0.0, 0.0, 0.0])
-u_p1 = np.array([0.0, 1.0, 1.0])  # orientation at p1
-Get_Angle(p0, p1, u_p1)
-
-print('np.linalg.norm(p1-p0): ', np.linalg.norm(p1-p0))

@@ -76,7 +76,7 @@ if __name__ == '__main__':
     os.environ['PATH'] += os.pathsep + os.path.abspath(r'C:\bin\mingw64\bin')
 
     fish_lengths = [0.30] # [0.10, 0.30]
-    incidence_angles = [47, 48, 49, 50, 51] # [90, 88, 86, 84, 82, 75] # [90, 82, 75]
+    incidence_angles = [64, 60, 56, 54, 52, 50, 46, 44, 42, 40] # [90, 88, 86, 84, 82, 75] # [90, 82, 75]
     depths = [50] #[10, 50, 100]
 
     for incidence_angle in incidence_angles:
@@ -86,7 +86,7 @@ if __name__ == '__main__':
                 herring_settings = createSettings(fish_length, depth, incidence_angle)
                 #solver = BiCGSTABSolver('ILU')
                 solver = IterativeRefinement('LU')
-                ts_file_name = 'ts_vs_freq_loop_{}_a_{}_b_{}_f1_{}_f2_{}_rhos_{:.2f}_IncAngle_{}_depth_{}_length_{}_{}.csv'.format(herring_settings.prefix,
+                ts_file_name = 'ts_vs_freq_loop_{}_a_{:.5f}_b_{:.5f}_f1_{}_f2_{}_rhos_{:.2f}_IncAngle_{}_depth_{}_length_{}_{}.csv'.format(herring_settings.prefix,
                                                                                                                                    herring_settings.a, herring_settings.b,
                                                                                                                                    int(herring_settings.min_freq / 1000),
                                                                                                                                    int(herring_settings.max_freq / 1000),
