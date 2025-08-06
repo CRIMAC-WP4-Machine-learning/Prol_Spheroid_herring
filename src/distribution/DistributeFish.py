@@ -125,62 +125,83 @@ def Find_closestfile_in_database(_df_database, _Depth,_Length, _IncAngl):
     return dict_closest_row
 
 
-def func_frq_TS_from_Dict(_Dir, _Inp_Dict, _Lfish, _f_vec):
-    # print('_Inp_Dict :', _Inp_Dict)
-    # print(os.path.join(_Dir, _Inp_Dict['filename']))
+# def func_frq_TS_from_Dict(_Dir, _Inp_Dict, _Lfish, _f_vec):
+#     # print('_Inp_Dict :', _Inp_Dict)
+#     # print(os.path.join(_Dir, _Inp_Dict['filename']))
+#     df_csv = pd.read_csv(os.path.join(_Dir, _Inp_Dict['filename']))
+#     print(df_csv.columns)
+
+
+#     L0 = _Inp_Dict['length']
+    
+#     # print(' type(df_csv): ', type(df_csv))
+#     freq_vec0 = df_csv['Freq_kHz']
+#     TS_vec0 = df_csv['TS']
+#     Fbs_vec0 = df_csv['f_bs']
+
+#     # Ensure f_bs is complex. That is if f_bs is stored as string (e.g., "1+2j"), convert it to complex
+#     if not np.iscomplexobj(Fbs_vec0):
+#         Fbs_vec0 = Fbs_vec0.astype(complex)
+
+#     ScaleFactor=(L0/_Lfish)**(1/3) # !!!!! Req0/Req = L0/_Lfish: Note that since in the current version, 
+#                             #           "b" the minor axis of prolate spheroid is indepndent of L
+#     plt.plot(freq_vec0, TS_vec0)
+#     print('ScaleFactor: >>>>>>>>>>>>>>>>>>>>>>', ScaleFactor)
+    
+#     def Func_rescale_TS(_t_vec, _Sig, _factor):
+#         _t_vec = np.asarray(_t_vec)   # Convert pandas Series or list to ndarray
+#         _t_vec = np.insert(_t_vec, 0, 0.0)        # Insert 0.0 at the beginning
+
+#         _Sig = np.asarray(_Sig)  # Convert pandas Series or list to ndarray
+#         _Sig = np.insert(_Sig, 0, 1E-200)        # Insert 0.0 at the beginning
+
+#         Scaled_t = _factor * _t_vec
+#         Sig_interpolated = np.interp(_f_vec, Scaled_t, _Sig)
+#         ScaledSig = Sig_interpolated + 20 * np.log10(1 / _factor)
+
+#         return _f_vec, ScaledSig
+    
+#     def Func_rescale_Fbs(_t_vec, _Sig, _factor):
+#         _t_vec = np.asarray(_t_vec)   # Convert pandas Series or list to ndarray
+#         _t_vec = np.insert(_t_vec, 0, 0.0)        # Insert 0.0 at the beginning
+#         _Sig = np.asarray(_Sig)
+#         _Sig = np.insert(_Sig, 0, 1E-200)        # Insert 0.0 at the beginning
+
+#         Scaled_t = _factor * _t_vec
+#         Sig_interpolated = np.interp(_f_vec, Scaled_t, _Sig)
+#         ScaledSig = Sig_interpolated  * 1/_factor
+
+#         return ScaledSig
+
+    
+#     [freq_vec, TS_vec] = Func_rescale_TS(freq_vec0, TS_vec0, ScaleFactor)
+#     Real_f_bs = Func_rescale_Fbs(freq_vec0, np.real(Fbs_vec0), ScaleFactor)
+#     Imag_f_bs = Func_rescale_Fbs(freq_vec0, np.imag(Fbs_vec0), ScaleFactor)
+#     scaled_f_bs = Real_f_bs + 1j * Imag_f_bs
+
+#     return freq_vec, TS_vec, scaled_f_bs
+
+def func_get_frq_TS_fbs_Dict(_Dir, _Inp_Dict, _Lfish):
+    '''
+    _Dir: directory of modeled TS and fbs as function of frequency
+    _Inp_Dict: is the output of function "Find_closestfile_in_database" which contains filename in _Dir which is 
+               closest to _Lfish at a given Depth and tilt angle 
+    '''
     df_csv = pd.read_csv(os.path.join(_Dir, _Inp_Dict['filename']))
     print(df_csv.columns)
 
-
-    L0 = _Inp_Dict['length']
-    
     # print(' type(df_csv): ', type(df_csv))
     freq_vec0 = df_csv['Freq_kHz']
     TS_vec0 = df_csv['TS']
     Fbs_vec0 = df_csv['f_bs']
-
+    
     # Ensure f_bs is complex. That is if f_bs is stored as string (e.g., "1+2j"), convert it to complex
     if not np.iscomplexobj(Fbs_vec0):
         Fbs_vec0 = Fbs_vec0.astype(complex)
 
-    ScaleFactor=(L0/_Lfish)**(1/3) # !!!!! Req0/Req = L0/_Lfish: Note that since in the current version, 
-                            #           "b" the minor axis of prolate spheroid is indepndent of L
-    plt.plot(freq_vec0, TS_vec0)
-    print('ScaleFactor: >>>>>>>>>>>>>>>>>>>>>>', ScaleFactor)
-    
-    def Func_rescale_TS(_t_vec, _Sig, _factor):
-        _t_vec = np.asarray(_t_vec)   # Convert pandas Series or list to ndarray
-        _t_vec = np.insert(_t_vec, 0, 0.0)        # Insert 0.0 at the beginning
+    return freq_vec0, TS_vec0, Fbs_vec0
 
-        _Sig = np.asarray(_Sig)  # Convert pandas Series or list to ndarray
-        _Sig = np.insert(_Sig, 0, 1E-200)        # Insert 0.0 at the beginning
 
-        Scaled_t = _factor * _t_vec
-        Sig_interpolated = np.interp(_f_vec, Scaled_t, _Sig)
-        ScaledSig = Sig_interpolated + 20 * np.log10(1 / _factor)
-
-        return _f_vec, ScaledSig
-    
-    def Func_rescale_Fbs(_t_vec, _Sig, _factor):
-        _t_vec = np.asarray(_t_vec)   # Convert pandas Series or list to ndarray
-        _t_vec = np.insert(_t_vec, 0, 0.0)        # Insert 0.0 at the beginning
-        _Sig = np.asarray(_Sig)
-        _Sig = np.insert(_Sig, 0, 1E-200)        # Insert 0.0 at the beginning
-
-        Scaled_t = _factor * _t_vec
-        Sig_interpolated = np.interp(_f_vec, Scaled_t, _Sig)
-        ScaledSig = Sig_interpolated  * 1/_factor
-
-        return ScaledSig
-
-    
-    [freq_vec, TS_vec] = Func_rescale_TS(freq_vec0, TS_vec0, ScaleFactor)
-    Real_f_bs = Func_rescale_Fbs(freq_vec0, np.real(Fbs_vec0), ScaleFactor)
-    Imag_f_bs = Func_rescale_Fbs(freq_vec0, np.imag(Fbs_vec0), ScaleFactor)
-    scaled_f_bs = Real_f_bs + 1j * Imag_f_bs
-
-    return freq_vec, TS_vec, scaled_f_bs
-        
 def plot_fish_school(_points, _orientations):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -205,69 +226,7 @@ def plot_fish_school(_points, _orientations):
 
     plt.show()    
 
-
-#%% main part
-Observation_point = np.array([0, 0, 0]) # Echosounder location
-
-# Example: place N points (fish location) with no overlap in a prolate or oblate spheroid
-N = 100
-a, b = 2.0, 0.6  # spheroid axes
-points = []
-min_dist = 0.2
-Average_school_Depth = 50 # m
-
-# "Theta" is the angle of projected vector on XY plane and X axis
-theta_range = [0, np.pi/12]
-
-# "Phi" is the angle of vector and Z axis
-phi_range = [3*np.pi/12, 9*np.pi/12]
-
-
-# Create N points(x, y, z) with min_dist to avoid overlap:
-while len(points) < N:
-    x = np.random.uniform(-a, a) 
-    y = np.random.uniform(-b, b)
-    z = np.random.uniform(-b, b) - Average_school_Depth
-    if (x**2/a**2 + y**2/b**2 + (z + Average_school_Depth)**2/b**2) <= 1:
-        p = np.array([x, y, z])
-        if all(np.linalg.norm(p - q) > min_dist for q in points):
-            points.append(p)
-
-points = np.array(points)
-
-
-# Random unit vectors: 
-# "Theta" is the angle of projected vector on XY plane and X axis
-# "Phi" is the angle of vector and Z axis
-# Generate arrays of theta and phi
-theta = np.random.uniform(theta_range[0], theta_range[1], size=len(points))
-phi = np.random.uniform(phi_range[0], phi_range[1], size=len(points))
-
-# Convert spherical to Cartesian coordinates
-x = np.sin(phi) * np.cos(theta)
-y = np.sin(phi) * np.sin(theta)
-z = np.cos(phi)
-
-orientations = np.stack((x, y, z), axis=1)  # shape (N, 3)
-orientations /= np.linalg.norm(orientations, axis=1)[:, np.newaxis]  # normalize
-
-print(orientations[0])
-
-# Plot the fish school of N fish
-plot_fish_school(points, orientations)
-
-
-# # For a given point:
-# # Incident_Angle_deg:
-# # Angle between "u" the unit vector of point "p1" and vector connecting "p0" to "p1":
-# p0 = np.array([0.0, 0.0, 5.0]) 
-# p1 = np.array([-1.0, 0.0, 0.0])
-# u_p1 = np.array([1.0, 0.0, 0.0])  # orientation at p1
-# Incident_Angle_deg = Get_Angle(p0, p1, u_p1)
-
-
-
-#%%
+#%% Initialize Directories and Databases:
 
 # 1. Get the directory where the script is located
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -288,36 +247,82 @@ print('database_dir: ',database_dir)
 df_database = Extract_database_metadata(database_dir)
 
 #====================================
-Depth = 50 
-Length = 0.3
-IncAngl = 90
+#%% Test functions
 
-f_vec = np.arange(1, 260, 1)
+# # For a given point:
+# # Incident_Angle_deg:
+# # Angle between "u" the unit vector of point "p1" and vector connecting "p0" to "p1":
+# p0 = np.array([0.0, 0.0, 5.0]) 
+# p1 = np.array([-1.0, 0.0, 0.0])
+# u_p1 = np.array([1.0, 0.0, 0.0])  # orientation at p1
+# Incident_Angle_deg = Get_Angle(p0, p1, u_p1)
+
+# # Get the TS(f) and fbs(f) for fish with length and tilt angle at given depth:
+# Depth = 50 
+# Length = 0.30
+# IncAngl = 88
 
 # # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
-target_dict = Find_closestfile_in_database(df_database, Depth, Length, IncAngl)
-print('target_dict: ', target_dict)
-L_fish = 0.15
-[freq_scaled, TS_scaled, scaled_f_bs] = func_frq_TS_from_Dict(database_dir, target_dict, L_fish, f_vec)
-# plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
-plt.plot(freq_scaled, TS_scaled, color = [1, 0, 0], dashes = [3,2], linewidth = 2)
-
-
-
-# Depth = 50 
-# Length = 0.2
-# IncAngl = 90
-
-# f_vec = np.arange(1, 260, 1)
-
-# # # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
 # target_dict = Find_closestfile_in_database(df_database, Depth, Length, IncAngl)
 # print('target_dict: ', target_dict)
-# L_fish = 0.2 
-# [freq_scaled, TS_scaled, scaled_f_bs] = func_frq_TS_from_Dict(database_dir, target_dict, L_fish, f_vec)
-# # plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [0, 0, 1], dashes = [3,2], linewidth = 2)
-# plt.plot(freq_scaled, TS_scaled, color = [0, 0, 1], dashes = [3,2], linewidth = 2)
+# L_fish = Length
+# [freq_scaled, TS_scaled, scaled_f_bs] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
+# # plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
+# plt.plot(freq_scaled, TS_scaled, color = [1, 0, 0], dashes = [3,2], linewidth = 2)
+# plt.show()
 
+
+#%% main part
+Observation_point = np.array([0, 0, 0]) # Echosounder location
+
+# //////////////////////////////////////////////////////////////////////////////////////
+# Example: place N points (fish location) with no overlap in a prolate or oblate spheroid
+N = 100
+a, b = 2.0, 0.6  # spheroid axes
+points = []
+min_dist = 0.2
+Average_school_Depth = 50 # m
+
+# "Theta" is the angle of projected vector on XY plane and X axis
+theta_range = [0, np.pi/12]
+
+# "Phi" is the angle of vector and Z axis
+phi_range = [3*np.pi/12, 9*np.pi/12]
+
+
+# I. Create N points(x, y, z) with min_dist to avoid overlap:
+while len(points) < N:
+    x = np.random.uniform(-a, a) 
+    y = np.random.uniform(-b, b)
+    z = np.random.uniform(-b, b) - Average_school_Depth
+    if (x**2/a**2 + y**2/b**2 + (z + Average_school_Depth)**2/b**2) <= 1:
+        p = np.array([x, y, z])
+        if all(np.linalg.norm(p - q) > min_dist for q in points):
+            points.append(p)
+
+points = np.array(points)
+
+# II. Orientaion of fish - Random unit vectors: 
+# "Theta" is the angle of projected vector on XY plane and X axis
+# "Phi" is the angle of vector and Z axis
+# Generate arrays of theta and phi
+theta = np.random.uniform(theta_range[0], theta_range[1], size=len(points))
+phi = np.random.uniform(phi_range[0], phi_range[1], size=len(points))
+
+# Convert spherical to Cartesian coordinates
+x = np.sin(phi) * np.cos(theta)
+y = np.sin(phi) * np.sin(theta)
+z = np.cos(phi)
+
+orientations = np.stack((x, y, z), axis=1)  # shape (N, 3)
+orientations /= np.linalg.norm(orientations, axis=1)[:, np.newaxis]  # normalize
+
+print(orientations[0])
+
+# Plot the fish school of N fish
+plot_fish_school(points, orientations)
+
+# \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 print('len(points): ', len(points))
 
@@ -345,4 +350,4 @@ print('len(points): ', len(points))
 
 # plt.plot(freq_scaled, TS_scaled, color = [0, 0, 0], dashes = [3,0], linewidth = 2)
 # plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
-plt.show()
+# plt.show()
