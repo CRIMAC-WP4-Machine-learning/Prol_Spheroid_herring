@@ -277,30 +277,48 @@ Observation_point = np.array([0, 0, 0]) # Echosounder location
 
 # //////////////////////////////////////////////////////////////////////////////////////
 # Example: place N points (fish location) with no overlap in a prolate or oblate spheroid
-N = 100
+N = 300
 a, b = 2.0, 0.6  # spheroid axes
 points = []
 min_dist = 0.2
 Average_school_Depth = 50 # m
 
 # "Theta" is the angle of projected vector on XY plane and X axis
-theta_range = [0, np.pi/12]
+theta_range = np.array([0, 15])*np.pi/180
 
 # "Phi" is the angle of vector and Z axis
-phi_range = [3*np.pi/12, 9*np.pi/12]
+phi_range = np.array([70, 110])*np.pi/180
 
 
 # I. Create N points(x, y, z) with min_dist to avoid overlap:
 while len(points) < N:
     x = np.random.uniform(-a, a) 
-    y = np.random.uniform(-b, b)
+    y = np.random.uniform(-a, a)
     z = np.random.uniform(-b, b) - Average_school_Depth
-    if (x**2/a**2 + y**2/b**2 + (z + Average_school_Depth)**2/b**2) <= 1:
+    if (x**2/a**2 + y**2/a**2 + (z + Average_school_Depth)**2/b**2) <= 1:
         p = np.array([x, y, z])
         if all(np.linalg.norm(p - q) > min_dist for q in points):
             points.append(p)
 
 points = np.array(points)
+
+# # Test case for two fish: ===========================
+# points = []
+# p = np.array([0, 0, - Average_school_Depth])
+# points.append(p)
+
+# p = np.array([0, 0, - Average_school_Depth - 0.25])
+# points.append(p)
+
+# p = np.array([0, 0, - Average_school_Depth - 0.35])
+# points.append(p)
+
+# p = np.array([0, 0, - Average_school_Depth - 0.6])
+# points.append(p)
+
+# points = np.array(points)
+# # ====================================================
+
 
 # II. Orientaion of fish - Random unit vectors: 
 # "Theta" is the angle of projected vector on XY plane and X axis
@@ -325,29 +343,36 @@ plot_fish_school(points, orientations)
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 print('len(points): ', len(points))
+p_far = 0
+for ii in range(0, len(points)):
+    point_ii = points[ii]
+    orientations_ii = orientations[ii]
 
-# for ii in range(0, len(points)):
-#     point_ii = points[ii]
-#     orientations_ii = orientations[ii]
+    Incident_Angle_ii = Get_Angle(Observation_point, point_ii, orientations_ii)
 
-#     Incident_Angle_ii = Get_Angle(Observation_point, point_ii, orientations_ii)
+    print('Incident_Angle_ii: ', Incident_Angle_ii)
 
-#     print('Incident_Angle_ii: ', Incident_Angle_ii)
+    Length = 0.1 # m.  This can be changed to include distribution of ranges
 
-#     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
-#     target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
+    # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
+    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
     
-#     L_fish = 0.3 #m 
-#     [freq_scaled, TS_scaled, scaled_f_bs] = func_frq_TS_from_Dict(database_dir, target_dict, L_fish)
-#     plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
+    L_fish = Length # m 
+    [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
+    Distance = np.abs(Observation_point[2]-point_ii[2])
+    print(Distance)
+    p_far_ii = f_bs_ii * np.exp(1j*2*np.pi*(1000*freq/1500)*Distance) 
+    p_far = p_far + p_far_ii
+    plt.plot(freq, 20*np.log10(np.abs(f_bs_ii)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
 
+plt.plot(freq, 20*np.log10(np.abs(p_far)), color = [0, 0, 0], dashes = [3,0], linewidth = 2)
 
 # target_dict = Find_closestfile_in_database(df_database, Depth, Length, IncAngl)
 # print('target_dict:>>>>>>> ',target_dict)
 
 # L_fish = 0.15
-# [freq_scaled, TS_scaled, scaled_f_bs] = func_frq_TS_from_Dict(database_dir, target_dict, L_fish)
+# [freq_scaled, TS_scaled, scaled_f_bs] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
 
 # plt.plot(freq_scaled, TS_scaled, color = [0, 0, 0], dashes = [3,0], linewidth = 2)
 # plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
-# plt.show()
+plt.show()
