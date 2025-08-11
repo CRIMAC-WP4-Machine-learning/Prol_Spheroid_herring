@@ -284,7 +284,7 @@ min_dist = 0.2
 Average_school_Depth = 50 # m
 
 # "Theta" is the angle of projected vector on XY plane and X axis
-theta_range = np.array([0, 15])*np.pi/180
+theta_range = np.array([-15, 15])*np.pi/180
 
 # "Phi" is the angle of vector and Z axis
 phi_range = np.array([70, 110])*np.pi/180
@@ -323,9 +323,34 @@ points = np.array(points)
 # II. Orientaion of fish - Random unit vectors: 
 # "Theta" is the angle of projected vector on XY plane and X axis
 # "Phi" is the angle of vector and Z axis
-# Generate arrays of theta and phi
-theta = np.random.uniform(theta_range[0], theta_range[1], size=len(points))
-phi = np.random.uniform(phi_range[0], phi_range[1], size=len(points))
+
+# RANDOM distribution:   -----------------------------------------------
+# Generate arrays of theta and phi: 
+# theta = np.random.uniform(theta_range[0], theta_range[1], size=len(points))
+# phi = np.random.uniform(phi_range[0], phi_range[1], size=len(points))
+
+# # NORMAL distribution:   -----------------------------------------------
+# Parameters
+mu = np.mean(theta_range)       # mean
+sigma = 0.25*(theta_range[1]-theta_range[0])     # standard deviation
+
+theta = np.random.normal(mu, sigma, N)
+
+# Plot histogram
+count, bins, ignored = plt.hist(180*theta/np.pi, bins=30, density=True, alpha=0.6, color='skyblue', edgecolor='black')
+plt.xlabel('$\\theta$',fontsize = 12)
+plt.show()
+
+# Parameters
+mu = np.mean(phi_range)       # mean
+sigma = 0.25*(phi_range[1]-phi_range[0])     # standard deviation
+
+phi = np.random.normal(mu, sigma, N)
+
+# Plot histogram
+count, bins, ignored = plt.hist(180*phi/np.pi, bins=30, density=True, alpha=0.6, color='skyblue', edgecolor='black')
+plt.xlabel(r'$\phi$',fontsize = 12)
+plt.show()
 
 # Convert spherical to Cartesian coordinates
 x = np.sin(phi) * np.cos(theta)
@@ -352,7 +377,7 @@ for ii in range(0, len(points)):
 
     print('Incident_Angle_ii: ', Incident_Angle_ii)
 
-    Length = 0.1 # m.  This can be changed to include distribution of ranges
+    Length = 0.3 # m.  This can be changed to include distribution of ranges
 
     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
     target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
