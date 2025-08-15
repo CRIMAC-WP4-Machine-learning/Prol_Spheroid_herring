@@ -5,6 +5,7 @@ import os
 import glob
 import pandas as pd
 import re
+from scipy.signal import savgol_filter
 
 #%% funcs -----------------------------------
 def Get_Angle(_p0, _p1, _u_p1):
@@ -280,7 +281,7 @@ Observation_point = np.array([0, 0, 0]) # Echosounder location
 N = 300
 a, b = 2.0, 0.6  # spheroid axes
 points = []
-min_dist = 0.2
+min_dist = 0.1
 Average_school_Depth = 50 # m
 
 # "Theta" is the angle of projected vector on XY plane and X axis
@@ -377,7 +378,7 @@ for ii in range(0, len(points)):
 
     print('Incident_Angle_ii: ', Incident_Angle_ii)
 
-    Length = 0.3 # m.  This can be changed to include distribution of ranges
+    Length = 0.1 # m.  This can be changed to include distribution of ranges
 
     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
     target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
@@ -388,9 +389,19 @@ for ii in range(0, len(points)):
     print(Distance)
     p_far_ii = f_bs_ii * np.exp(1j*2*np.pi*(1000*freq/1500)*Distance) 
     p_far = p_far + p_far_ii
-    plt.plot(freq, 20*np.log10(np.abs(f_bs_ii)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
+    # plt.plot(freq, 20*np.log10(np.abs(f_bs_ii)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
 
-plt.plot(freq, 20*np.log10(np.abs(p_far)), color = [0, 0, 0], dashes = [3,0], linewidth = 2)
+Total_p = 20*np.log10(np.abs(p_far))
+plt.plot(freq, Total_p, color = [0, 0, 0], dashes = [3,0], linewidth = 1)
+
+window_L = int(len(Total_p) / 5)
+# Ensure window_length is odd
+if window_L % 2 == 0:
+    window_L += 1
+smoothed = savgol_filter(Total_p, window_length=window_L, polyorder=3)
+plt.plot(freq, smoothed, color = [1, 0, 0], dashes = [3,0], linewidth = 3)
+
+plt.xlabel(' Frequency (kHz)', fontsize = 12)
 
 # target_dict = Find_closestfile_in_database(df_database, Depth, Length, IncAngl)
 # print('target_dict:>>>>>>> ',target_dict)
