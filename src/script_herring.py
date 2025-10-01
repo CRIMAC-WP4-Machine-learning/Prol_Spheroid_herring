@@ -68,7 +68,10 @@ def createSettings(fish_length, depth, incidence_angle):
     ro_s = func_VanDerWaals_Air(P_pa, 15) #(b_0**2)/(b**2)*ro_s_0
     c_w = 1500               # sound speed in water
     c_s = 0.23 * c_w         # the sound speed is assumed not to depend on depth
-    return HerringSettings('herring', ro_s, c_s, a, b, 500, 500, 200000, incidence_angle)
+    freq_Delta = 500
+    freq_start = 500
+    freq_end = 200000
+    return HerringSettings('herring', ro_s, c_s, a, b, freq_Delta, freq_start, freq_end, incidence_angle)
 
 
 if __name__ == '__main__':
@@ -76,7 +79,7 @@ if __name__ == '__main__':
     os.environ['PATH'] += os.pathsep + os.path.abspath(r'C:\bin\mingw64\bin')
 
     fish_lengths = [0.30] # [0.10, 0.30]
-    incidence_angles = [90, 88, 86, 84, 82, 80] # [64, 60, 56, 54, 52, 50, 46, 44, 42, 40]  # [90, 82, 75]
+    incidence_angles = [78, 76] # [90, 88, 86, 84, 82, 80]   # [90, 82, 75]
     depths = [50] #[10, 50, 100]
 
     for incidence_angle in incidence_angles:
