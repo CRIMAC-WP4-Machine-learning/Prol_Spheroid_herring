@@ -278,7 +278,7 @@ Observation_point = np.array([0, 0, 0]) # Echosounder location
 
 # //////////////////////////////////////////////////////////////////////////////////////
 # Example: place N points (fish location) with no overlap in a prolate or oblate spheroid
-N = 300
+N = 2
 a, b = 2.0, 0.6  # spheroid axes
 points = []
 min_dist = 0.1
@@ -302,22 +302,25 @@ while len(points) < N:
             points.append(p)
 
 points = np.array(points)
+print(points)
 
 # # Test case for two fish: ===========================
-# points = []
-# p = np.array([0, 0, - Average_school_Depth])
-# points.append(p)
+points = []
+p = np.array([0, 0, - Average_school_Depth])
+points.append(p)
 
-# p = np.array([0, 0, - Average_school_Depth - 0.25])
-# points.append(p)
+p = np.array([0, 0, - Average_school_Depth - 0.5])
+points.append(p)
 
-# p = np.array([0, 0, - Average_school_Depth - 0.35])
-# points.append(p)
 
-# p = np.array([0, 0, - Average_school_Depth - 0.6])
-# points.append(p)
+# # p = np.array([0, 0, - Average_school_Depth - 0.35])
+# # points.append(p)
 
-# points = np.array(points)
+# # p = np.array([0, 0, - Average_school_Depth - 0.6])
+# # points.append(p)
+
+points = np.array(points)
+print(points)
 # # ====================================================
 
 
@@ -327,8 +330,8 @@ points = np.array(points)
 
 # RANDOM distribution:   -----------------------------------------------
 # Generate arrays of theta and phi: 
-# theta = np.random.uniform(theta_range[0], theta_range[1], size=len(points))
-# phi = np.random.uniform(phi_range[0], phi_range[1], size=len(points))
+theta = np.random.uniform(theta_range[0], theta_range[1], size=len(points))
+phi = np.random.uniform(phi_range[0], phi_range[1], size=len(points))
 
 # # NORMAL distribution:   -----------------------------------------------
 # Parameters
