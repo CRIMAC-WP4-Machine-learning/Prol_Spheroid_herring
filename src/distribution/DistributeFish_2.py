@@ -189,6 +189,8 @@ def func_get_frq_TS_fbs_Dict(_Dir, _Inp_Dict, _Lfish):
                closest to _Lfish at a given Depth and tilt angle 
     '''
     df_csv = pd.read_csv(os.path.join(_Dir, _Inp_Dict['filename']))
+    TS_file = 'ts_vs_freq_loop_herring_a_0.01000_b_0.00400_f1_0_f2_10_rhos_7.34_IncAngle_90_depth_50_length_0.0_iterRef_LU.csv'
+    df_csv = pd.read_csv(os.path.join(_Dir, TS_file))
     print(df_csv.columns)
 
     # print(' type(df_csv): ', type(df_csv))
@@ -240,7 +242,7 @@ ParentDIR = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
 print('Parent DIR: >>> ', ParentDIR)
 
 # Database Directory containing csv files with TS(f) and F_bs(f):
-database_dir = os.path.join(ParentDIR, 'model_results','model_backscatter_500Hz/')
+database_dir = os.path.join(ParentDIR, 'model_results','model_backscatter_250Hz/')
 print('database_dir: ',database_dir)
 
 # Create database info from csv files in database_dir. df_database has filename, target (fish) length, incident angle, depth,
@@ -309,7 +311,7 @@ points = []
 p = np.array([0, 0, - Average_school_Depth])
 points.append(p)
 
-p = np.array([0, 0, - Average_school_Depth - 0.5])
+p = np.array([0, 0, - Average_school_Depth - 1])
 points.append(p)
 
 
@@ -388,15 +390,16 @@ for ii in range(0, len(points)):
     
     L_fish = Length # m 
     [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
+    print(freq.shape)
     Distance = np.abs(Observation_point[2]-point_ii[2])
-    print(Distance)
-    p_far_ii = (f_bs_ii/Distance) * np.exp(1j*2*np.pi*(1000*freq/1500)*Distance) 
+    print('Distance: ', Distance)
+    p_far_ii = (f_bs_ii/(2*Distance)) * np.exp(1j*2*np.pi*(1000*freq/1500)*(2*Distance)) 
     p_far = p_far + p_far_ii
     # plt.plot(freq, 20*np.log10(np.abs(f_bs_ii)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
 
 point_ii = points[0]
 Distance = np.abs(Observation_point[2]-point_ii[2])
-Total_p_TS = 20*np.log10(np.abs(Distance * p_far))
+Total_p_TS = 20*np.log10(np.abs(2*Distance * p_far))
 plt.plot(freq, Total_p_TS, color = [0, 0, 0], dashes = [3,0], linewidth = 1)
 
 window_L = int(len(Total_p_TS) / 5)
@@ -404,7 +407,7 @@ window_L = int(len(Total_p_TS) / 5)
 if window_L % 2 == 0:
     window_L += 1
 smoothed = savgol_filter(Total_p_TS, window_length=window_L, polyorder=3)
-plt.plot(freq, smoothed, color = [1, 0, 0], dashes = [3,0], linewidth = 3)
+# plt.plot(freq, smoothed, color = [1, 0, 0], dashes = [3,0], linewidth = 3)
 
 plt.xlabel(' Frequency (kHz)', fontsize = 12)
 

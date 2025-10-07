@@ -55,9 +55,9 @@ def func_VanDerWaals_Air(P_pa,T_celsius):
     return Ro
 
 def createSettings(fish_length, depth, incidence_angle):
-    a = fish_length * 0.26 * 0.5
+    a = 0.01 # fish_length * 0.26 * 0.5
     b_0 = 0.01 * 0.5 # from Gorska & Ona - todo: maybe it also should be varied with length?
-    b = b_0 * (1 + depth/10)**(-0.5)
+    b = 0.004 #b_0 * (1 + depth/10)**(-0.5)
 
     ro_w = 1027              # density of water
     # adjust ro_s to be approx 14 kg/m^3 at 100 m depth
@@ -67,10 +67,10 @@ def createSettings(fish_length, depth, incidence_angle):
     #ro_s = ro_s_0 * (1 + depth * (ro_s_100 - ro_s_0) / (ro_s_0 * 100))
     ro_s = func_VanDerWaals_Air(P_pa, 15) #(b_0**2)/(b**2)*ro_s_0
     c_w = 1500               # sound speed in water
-    c_s = 0.23 * c_w         # the sound speed is assumed not to depend on depth
-    freq_Delta = 500
+    c_s = 343 #0.23 * c_w         # the sound speed is assumed not to depend on depth
+    freq_Delta = 150
     freq_start = 500
-    freq_end = 200000
+    freq_end = 100001
     return HerringSettings('herring', ro_s, c_s, a, b, freq_Delta, freq_start, freq_end, incidence_angle)
 
 
@@ -78,8 +78,8 @@ if __name__ == '__main__':
     # if the path to the gfortran compiler is not already in the PATH environment variable, it can be added here
     os.environ['PATH'] += os.pathsep + os.path.abspath(r'C:\bin\mingw64\bin')
 
-    fish_lengths = [0.30] # [0.10, 0.30]
-    incidence_angles = [78, 76] # [90, 88, 86, 84, 82, 80]   # [90, 82, 75]
+    fish_lengths = [0.00] # [0.10, 0.30]
+    incidence_angles = [90, 89, 88, 87, 86, 84, 82, 80]   # [90, 82, 75]
     depths = [50] #[10, 50, 100]
 
     for incidence_angle in incidence_angles:
