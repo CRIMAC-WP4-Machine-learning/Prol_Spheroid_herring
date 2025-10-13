@@ -31,27 +31,27 @@ def func_VanDerWaals_Air(P_pa,T_celsius):
     import numpy as np
     # Van Der Waals eqution from "Thermodynamics - An Engineering Approach, Cengel & Boles 2014" Eq 3-22
     # where "a" and "b" are estimated from 3-23
-    
-    T=273+T_celsius 
-    R=0.2870
-    
+
+    T = 273 + T_celsius
+    R = 0.2870
+
     # Critical values for Oxygen:
-    T_cr=132.5 # "Kelvin" Critical temperature
-    P_cr=3.77E6 # "Pa" Critical pressure
+    T_cr = 132.5  # "Kelvin" Critical temperature
+    P_cr = 3.77E6  # "Pa" Critical pressure
     #V_cr=0.0780 # m³/kmol  Critical per unit kmol
-    
-    a=27*R*R*T_cr*T_cr/(64*P_cr)
-    b=R*T_cr/(8*P_cr)
-    
+
+    a = 27 * R * R * T_cr * T_cr / (64 * P_cr)
+    b = R * T_cr / (8 * P_cr)
+
     # Av³+Bv²+Cv+D=0
-    A=P_pa
-    B=-P_pa*b-R*T
-    C=a
-    D=-a*b
-    
-    v_vec=np.roots([A,B,C,D])
-    
-    Ro=0.001*1/np.real(v_vec[0])
+    A = P_pa
+    B = -P_pa * b - R * T
+    C = a
+    D = -a * b
+
+    v_vec = np.roots([A, B, C, D])
+
+    Ro = 0.001 * 1 / np.real(v_vec[0])
     return Ro
 
 def createSettings(fish_length, depth, incidence_angle):
@@ -61,7 +61,7 @@ def createSettings(fish_length, depth, incidence_angle):
 
     ro_w = 1027              # density of water
     # adjust ro_s to be approx 14 kg/m^3 at 100 m depth
-    P_pa = 1e5 + ro_w*depth*9.81
+    P_pa = 1e5 + ro_w * depth * 9.81
     # ro_s_0 = 0.00129 * ro_w  # density at 0m
     # ro*_s_100 = 14            # density at 100m
     #ro_s = ro_s_0 * (1 + depth * (ro_s_100 - ro_s_0) / (ro_s_0 * 100))
@@ -104,7 +104,7 @@ if __name__ == '__main__':
                     continue
                 spheroid = ProlateSpheroid(herring_settings, solver)
                 try:
-                    spheroid.run(ts_file_name)
+                    spheroid.run(freq_resp_file)
                 except Exception as e:
                     # skip to the next case if a simulation fails for any reason
                     print(e)
