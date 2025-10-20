@@ -118,6 +118,7 @@ def Find_closestfile_in_database(_df_database, _Depth,_Length, _IncAngl):
     length_filtered['angle_diff'] = np.abs(length_filtered['IncAngle'] - _IncAngl)
     min_angle_diff = length_filtered['angle_diff'].min()
     final_selection = length_filtered[length_filtered['angle_diff'] == min_angle_diff]
+    print(final_selection)
     
     # final_selection will contain the closest match(es)
     df_closest_row = final_selection.iloc[0]  # just take the first if multiple
@@ -189,6 +190,8 @@ def func_get_frq_TS_fbs_Dict(_Dir, _Inp_Dict, _Lfish):
                closest to _Lfish at a given Depth and tilt angle 
     '''
     df_csv = pd.read_csv(os.path.join(_Dir, _Inp_Dict['filename']))
+    # TS_file = 'ts_vs_freq_loop_herring_a_0.01000_b_0.00400_f1_0_f2_100_rhos_7.34_IncAngle_90_depth_50_length_0.0_iterRef_LU.csv'
+    # df_csv = pd.read_csv(os.path.join(_Dir, TS_file))
     print(df_csv.columns)
 
     # print(' type(df_csv): ', type(df_csv))
@@ -240,13 +243,20 @@ ParentDIR = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
 print('Parent DIR: >>> ', ParentDIR)
 
 # Database Directory containing csv files with TS(f) and F_bs(f):
-database_dir = os.path.join(ParentDIR, 'model_results','model_backscatter_500Hz/')
+database_dir = os.path.join(ParentDIR, 'model_results','model_backscatter_150Hz/')
 print('database_dir: ',database_dir)
 
+FEM_BEM_dir = os.path.join(ParentDIR, 'FEM_BEM/')
+print('FEM_BEM_dir: ',FEM_BEM_dir)
 # Create database info from csv files in database_dir. df_database has filename, target (fish) length, incident angle, depth,
 #  prolate spheroid dimensions of swimblader "a, b", 
 df_database = Extract_database_metadata(database_dir)
 
+from Func_FEMBEM import func_FEM_BEM
+
+FEM_BEM_files = ['FEM_BEM_II_TwoTargets_TS_a1cm_b4mm_rho7p34_90deg_Delta_0p5m_Thet90_Thet60.txt']
+
+[f_bem, TS_bem] = func_FEM_BEM(FEM_BEM_dir, FEM_BEM_files[0])
 #====================================
 #%% Test functions
 
@@ -276,8 +286,9 @@ df_database = Extract_database_metadata(database_dir)
 #%% main part
 Observation_point = np.array([0, 0, 0]) # Echosounder location
 
-# //////////////////////////////////////////////////////////////////////////////////////
+# |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 # Example: place N points (fish location) with no overlap in a prolate or oblate spheroid
+# |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 N = 2
 a, b = 2.0, 0.6  # spheroid axes
 points = []
@@ -285,7 +296,7 @@ min_dist = 0.1
 Average_school_Depth = 50 # m
 
 # "Theta" is the angle of projected vector on XY plane and X axis
-theta_range = np.array([-0.1, 0.1])*np.pi/180
+theta_range = np.array([-0.01, 0.01])*np.pi/180
 
 # "Phi" is the angle of vector and Z axis
 phi_range = np.array([89.99, 90.01])*np.pi/180
@@ -304,24 +315,6 @@ while len(points) < N:
 points = np.array(points)
 print(points)
 
-# # Test case for two fish: ===========================
-points = []
-p = np.array([0, 0, - Average_school_Depth])
-points.append(p)
-
-p = np.array([0, 0, - Average_school_Depth - 0.5])
-points.append(p)
-
-
-# # p = np.array([0, 0, - Average_school_Depth - 0.35])
-# # points.append(p)
-
-# # p = np.array([0, 0, - Average_school_Depth - 0.6])
-# # points.append(p)
-
-points = np.array(points)
-print(points)
-# # ====================================================
 
 
 # II. Orientaion of fish - Random unit vectors: 
@@ -366,6 +359,42 @@ orientations /= np.linalg.norm(orientations, axis=1)[:, np.newaxis]  # normalize
 
 print(orientations[0])
 
+
+# |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+#                       Test case for two fish:  
+# ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| 
+points = []
+p = np.array([0, 0, - Average_school_Depth])
+points.append(p)
+
+p = np.array([0, 0, - Average_school_Depth -  0.5])
+points.append(p)
+
+
+# p = np.array([0, 0, - Average_school_Depth - 0.6])
+# points.append(p)
+
+# # p = np.array([0, 0, - Average_school_Depth - 0.6])
+# # points.append(p)
+
+points = np.array(points)
+print(points)
+
+
+# Orientation: ---------------------------------------------
+PHI = np.array([90.0, 120.0 ]) * np.pi/180
+THETA = np.array([0.0, 0.0]) * np.pi/180
+
+# Convert spherical to Cartesian coordinates
+x = np.sin(PHI) * np.cos(THETA)
+y = np.sin(PHI) * np.sin(THETA)
+z = np.cos(PHI)
+
+orientations = np.stack((x, y, z), axis=1)  # shape (N, 3)
+orientations /= np.linalg.norm(orientations, axis=1)[:, np.newaxis]  # normalize
+# # ====================================================
+
+
 # Plot the fish school of N fish
 plot_fish_school(points, orientations)
 
@@ -381,32 +410,47 @@ for ii in range(0, len(points)):
 
     print('Incident_Angle_ii: ', Incident_Angle_ii)
 
-    Length = 0.3 # m.  This can be changed to include distribution of ranges
+    Length = 0.0 # m.  This can be changed to include distribution of ranges
 
     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
     target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
     
     L_fish = Length # m 
     [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
+    print(freq.shape)
     Distance = np.abs(Observation_point[2]-point_ii[2])
-    print(Distance)
+    print('Distance: ', Distance)
     p_far_ii = (f_bs_ii/(Distance*Distance)) * np.exp(1j*2*np.pi*(1000*freq/1500)*(2*Distance)) 
     p_far = p_far + p_far_ii
     # plt.plot(freq, 20*np.log10(np.abs(f_bs_ii)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
 
+
+
 point_ii = points[0]
 Distance = np.abs(Observation_point[2]-point_ii[2])
 Total_p_TS = 20*np.log10(np.abs(Distance*Distance * p_far))
-plt.plot(freq, Total_p_TS, color = [0, 0, 0], dashes = [3,0], linewidth = 1)
+plt.plot(freq, Total_p_TS, color = [0, 0, 0], dashes = [3,0], linewidth = 1, label = 'Superposition')
+
+plt.plot(f_bem/1000, TS_bem, color=[1,0,0], dashes = [2,2], label = 'FEM-BEM')
 
 window_L = int(len(Total_p_TS) / 5)
 # Ensure window_length is odd
 if window_L % 2 == 0:
     window_L += 1
 smoothed = savgol_filter(Total_p_TS, window_length=window_L, polyorder=3)
-plt.plot(freq, smoothed, color = [1, 0, 0], dashes = [3,0], linewidth = 3)
+# plt.plot(freq, smoothed, color = [1, 0, 0], dashes = [3,0], linewidth = 3)
 
 plt.xlabel(' Frequency (kHz)', fontsize = 12)
+plt.legend(
+    loc='upper right',     # location of legend
+    fontsize=12,          # font size
+    # title='Legend Title', # optional title
+    # title_fontsize=14,    # title font size
+    # frameon=True,         # draw a frame around the legend
+    # shadow=True,          # add shadow
+    facecolor='white',    # legend background color
+    # edgecolor='black'     # legend border color
+)
 
 # target_dict = Find_closestfile_in_database(df_database, Depth, Length, IncAngl)
 # print('target_dict:>>>>>>> ',target_dict)
