@@ -254,7 +254,7 @@ df_database = Extract_database_metadata(database_dir)
 
 from Func_FEMBEM import func_FEM_BEM
 
-FEM_BEM_files = ['FEM_BEM_II_TwoTargets_TS_a1cm_b4mm_rho7p34_90deg_Delta_0p5m_Thet90_Thet60.txt']
+FEM_BEM_files = ['FEM_BEM_II_FourTargets_TS_a1cm_b4mm_rho7p34_90deg_D1_0p1m_D2_0p2m_D3_0p3m.txt']
 
 [f_bem, TS_bem] = func_FEM_BEM(FEM_BEM_dir, FEM_BEM_files[0])
 #====================================
@@ -367,23 +367,23 @@ points = []
 p = np.array([0, 0, - Average_school_Depth])
 points.append(p)
 
-p = np.array([0, 0, - Average_school_Depth -  0.5])
+p = np.array([0, 0, - Average_school_Depth -  0.1])
 points.append(p)
 
 
-# p = np.array([0, 0, - Average_school_Depth - 0.6])
-# points.append(p)
+p = np.array([0, 0, - Average_school_Depth - 0.2])
+points.append(p)
 
-# # p = np.array([0, 0, - Average_school_Depth - 0.6])
-# # points.append(p)
+p = np.array([0, 0, - Average_school_Depth - 0.3])
+points.append(p)
 
 points = np.array(points)
 print(points)
 
 
 # Orientation: ---------------------------------------------
-PHI = np.array([90.0, 120.0 ]) * np.pi/180
-THETA = np.array([0.0, 0.0]) * np.pi/180
+PHI = np.array([90.0, 90.0, 90.0, 90.0 ]) * np.pi/180
+THETA = np.array([0.0, 0.0, 0.0, 0.0]) * np.pi/180
 
 # Convert spherical to Cartesian coordinates
 x = np.sin(PHI) * np.cos(THETA)
