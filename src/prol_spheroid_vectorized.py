@@ -1,5 +1,4 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import subprocess
 import os
 import csv
@@ -45,9 +44,8 @@ class ProlateSpheroid:
         self.python_exe = 'python' if system == 'Windows' else 'python3'
 
 
-    def run(self, ts_file_name):
+    def run(self, freq_resp_file):
         ParentDIR=os.path.split(os.getcwd())[0]
-        freq_resp_file = os.path.join(ParentDIR, 'temp', ts_file_name)
         frf = open(freq_resp_file, 'wt', newline='', encoding='utf-8')
         freq_resp_writer = csv.writer(frf, delimiter=',')
         freq_resp_writer.writerow(['Freq_kHz', 'TS', 'f_bs'])

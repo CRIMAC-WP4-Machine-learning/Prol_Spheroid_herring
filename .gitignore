@@ -19,3 +19,6 @@ src/profcn_II
 src/profcn_II.exe
 src/profcn_II.o
 src/profcn.dat
+
+# Windows metadata streams
+*Zone.Identifier*
