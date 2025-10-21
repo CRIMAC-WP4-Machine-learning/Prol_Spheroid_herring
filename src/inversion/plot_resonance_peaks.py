@@ -4,8 +4,8 @@ import numpy as np
 import pandas as pd
 import os
 
-from misc_read_and_plot_functions import read_data
-from liquid_sphere import far_field_pattern_liquid_sphere, func_VanDerWaals_Air
+from src.inversion.misc_read_and_plot_functions import read_data
+from src.inversion.liquid_sphere import far_field_pattern_liquid_sphere, func_VanDerWaals_Air
 
 
 def plot_df(data):
