@@ -110,7 +110,7 @@ def Find_closestfile_in_database(_df_database, _Depth,_Length, _IncAngl):
         length_filtered = larger_or_equal[larger_or_equal['length'] == selected_length]
     else:
         # Fallback: no length >= _Length, so pick the overall closest one
-        depth_filtered['length_diff'] = np.abs(depth_filtered['length'] - _Length)
+        depth_filtered = _df_database[_df_database['depth_diff'] == min_depth_diff].copy()
         min_length_diff = depth_filtered['length_diff'].min()
         length_filtered = depth_filtered[depth_filtered['length_diff'] == min_length_diff]
 
@@ -384,18 +384,18 @@ for ii in range(0, len(points)):
     Length = 0.3 # m.  This can be changed to include distribution of ranges
 
     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
-    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
+    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[1]), Length, Incident_Angle_ii)
     
     L_fish = Length # m 
     [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
-    Distance = np.abs(Observation_point[2]-point_ii[2])
+    Distance = np.linalg.norm(Observation_point-point_ii)
     print(Distance)
     p_far_ii = (f_bs_ii/(Distance*Distance)) * np.exp(1j*2*np.pi*(1000*freq/1500)*(2*Distance)) 
     p_far = p_far + p_far_ii
     # plt.plot(freq, 20*np.log10(np.abs(f_bs_ii)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
 
 point_ii = points[0]
-Distance = np.abs(Observation_point[2]-point_ii[2])
+Distance = np.linalg.norm(Observation_point-point_ii)
 Total_p_TS = 20*np.log10(np.abs(Distance*Distance * p_far))
 plt.plot(freq, Total_p_TS, color = [0, 0, 0], dashes = [3,0], linewidth = 1)
 
