@@ -4,6 +4,10 @@
 /temp/*
 !/temp/.gitignore
 
+**/*.jpg
+**/*.png
+/root/projects/Prol_Spheroid_herring/.venv/bin/python /root/projects/Prol_Spheroid_herring/src/distribution/DistributeFish_2.py
+
 # Ignore the virtual environment directory
 .venv/
 

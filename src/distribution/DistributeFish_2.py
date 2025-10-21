@@ -451,11 +451,17 @@ print('database_dir: ',database_dir)
 #  prolate spheroid dimensions of swimblader "a, b", 
 df_database = Extract_database_metadata(database_dir)
 
-Length_vec = [0.3, 0.25] # m.  This can be changed to include distribution of ranges
+Length_vec = [0.30, 0.30, 0.1] # m.  This can be changed to include distribution of ranges
 point_ii = np.array([0,-50,0])
-Incident_Angle_vec = [75.0, 90.0]
+Incident_Angle_vec = [90, 75, 90]
 
-Fig = plt.figure(figsize=(8, 6))
+Colors = [[0.0, 0.0, 0.0],
+          [1.0, 0.0, 0.0],
+          [0.0, 0.0, 1.0],
+          [0.5, 0.5, 0.5]
+          ]
+
+Fig = plt.figure(figsize=(10, 6))
 for jj in range(0, len(Length_vec)):
     Length = Length_vec[jj] # m.  This can be changed to include distribution of ranges
     point_ii = np.array([0,-50,0])
@@ -465,15 +471,19 @@ for jj in range(0, len(Length_vec)):
     print("------------------------------------------------")
     print("target_dict['filename']:::", target_dict['filename'])
     print("------------------------------------------------")
-    LABEL = rf"L={Length}, $\theta={Incident_Angle_ii}^\circ$"
+    LABEL = rf"L={Length} m, $\theta={Incident_Angle_ii}^\circ$"
 
     L_fish = Length # m 
     [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
     
-    plt.plot(freq, TS_ii, linewidth = 1.5, label=LABEL)
+    plt.plot(freq, TS_ii, color = Colors[jj],  linewidth = 1.5, label=LABEL)
     plt.tick_params(axis='both', labelsize=14)  # increase y-axis tick label size
     plt.xlabel('Frequency (kHz)', fontsize = 14)
     plt.ylabel('TS (dB) $re\ 1\ m^2$', fontsize = 14)
-    plt.ylim([-90,-20])
+    plt.ylim([-71,-15])
     plt.legend(fontsize=14)
+
+plt.savefig("TS_vs_freq.png", dpi=300, bbox_inches='tight')  # PNG
+plt.savefig("TS_vs_freq.jpg", dpi=300, bbox_inches='tight')  # JPG
+
 plt.show()
