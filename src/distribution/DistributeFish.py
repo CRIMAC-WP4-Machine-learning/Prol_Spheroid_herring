@@ -89,38 +89,40 @@ def Extract_database_metadata(_Dir):
 
     return _df
 
-def Find_closestfile_in_database(_df_database, _Depth,_Length, _IncAngl):
-    '''
-    reads the csv file for the corresponding fish length, at depth, and incident angle.
-    Outrput:
-    returns the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
-    '''
-        # Search within _df_dabase to find closest row to _Depth,_Length, _IncAngl:
+def Find_closestfile_in_database(_df_database, _Depth, _Length, _IncAngl):
+    """
+    Reads the CSV file for the corresponding fish length, depth, and incident angle.
+    Output:
+        Returns the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii".
+    """
+    # Make a copy to avoid modifying the original DataFrame
+    df_db = _df_database.copy()
+
     # Step 1: Closest depth
-    _df_database['depth_diff'] = np.abs(_df_database['depth'] - _Depth)
-    min_depth_diff = _df_database['depth_diff'].min()
-    depth_filtered = _df_database[_df_database['depth_diff'] == min_depth_diff].copy()
+    df_db['depth_diff'] = np.abs(df_db['depth'] - _Depth)
+    min_depth_diff = df_db['depth_diff'].min()
+    depth_filtered = df_db[df_db['depth_diff'] == min_depth_diff].copy()
 
-    # Step 2: Closest length that is >= _Length
+    # Step 2: Closest length >= _Length
     larger_or_equal = depth_filtered[depth_filtered['length'] >= _Length]
-
     if not larger_or_equal.empty:
-        # Choose the smallest such length
         selected_length = larger_or_equal['length'].min()
-        length_filtered = larger_or_equal[larger_or_equal['length'] == selected_length]
+        length_filtered = larger_or_equal[larger_or_equal['length'] == selected_length].copy()
     else:
-        # Fallback: no length >= _Length, so pick the overall closest one
-        depth_filtered = _df_database[_df_database['depth_diff'] == min_depth_diff].copy()
+        # Fallback: pick overall closest length
+        depth_filtered['length_diff'] = np.abs(depth_filtered['length'] - _Length)
         min_length_diff = depth_filtered['length_diff'].min()
-        length_filtered = depth_filtered[depth_filtered['length_diff'] == min_length_diff]
+        length_filtered = depth_filtered[depth_filtered['length_diff'] == min_length_diff].copy()
 
-    # Step 3: Closest IncAngle
+    # Step 3: Closest incident angle
     length_filtered['angle_diff'] = np.abs(length_filtered['IncAngle'] - _IncAngl)
     min_angle_diff = length_filtered['angle_diff'].min()
     final_selection = length_filtered[length_filtered['angle_diff'] == min_angle_diff]
-    
-    # final_selection will contain the closest match(es)
-    df_closest_row = final_selection.iloc[0]  # just take the first if multiple
+
+    print(final_selection)
+
+    # Take the first row if multiple matches
+    df_closest_row = final_selection.iloc[0]
     dict_closest_row = df_closest_row.to_dict()
 
     return dict_closest_row
@@ -240,7 +242,7 @@ ParentDIR = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
 print('Parent DIR: >>> ', ParentDIR)
 
 # Database Directory containing csv files with TS(f) and F_bs(f):
-database_dir = os.path.join(ParentDIR, 'model_results','model_backscatter_500Hz/')
+database_dir = os.path.join(ParentDIR, 'model_results','model_backscatter_150Hz/')
 print('database_dir: ',database_dir)
 
 # Create database info from csv files in database_dir. df_database has filename, target (fish) length, incident angle, depth,
