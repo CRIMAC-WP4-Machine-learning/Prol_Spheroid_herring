@@ -7,6 +7,8 @@ import pandas as pd
 import re
 from scipy.signal import savgol_filter
 
+from src.inversion.liquid_ps import inverse_frequency_response
+
 #%% funcs -----------------------------------
 def Get_Angle(_p0, _p1, _u_p1):
     ''' 
@@ -476,4 +478,12 @@ for jj in range(0, len(Length_vec)):
     plt.ylabel('TS (dB) $re\ 1\ m^2$', fontsize = 14)
     plt.ylim([-90,-20])
     plt.legend(fontsize=14)
+plt.show()
+
+delta_hz = np.mean(freq[1:].values - freq[:-1].values) * 1000
+time, ifft = inverse_frequency_response(Total_p_TS.values, delta_hz)
+plt.plot(time[1:] * 1500 * 0.5, ifft[1:], linewidth = 1, label = 'iFFT')
+plt.xlabel('Distance [m]', fontsize=12)
+plt.legend()
+plt.xlim([0.0, 1.0])
 plt.show()

@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 import os
-from misc_read_and_plot_functions import extract_file_ts
-from liquid_sphere import plot_series
+
+from src.inversion.misc_read_and_plot_functions import extract_file_ts
+from src.inversion.liquid_sphere import plot_series
 
 
 def frequency_response(data, delta):
@@ -61,7 +62,7 @@ def compute_collections():
 
     # iFFT of the frequency response
     collection_ts_array = np.asarray(collection_ts.TS)
-    time, ifft, = inverse_frequency_response(collection_ts_array, 1000)
+    time, ifft = inverse_frequency_response(collection_ts_array, 1000)
     plot_series(time[1:] * 1500, (ifft[1:], 'iFFT'))
 
     plot_series(ps_data.Freq_kHz * 1000, (ps_data.TS, 'single'), (collection_ts.TS, 'collection'))
