@@ -6,7 +6,9 @@ import glob
 import pandas as pd
 import re
 from scipy.signal import savgol_filter
-
+import sys
+# # The following manually adds /root/projects/Prol_Spheroid_herring/ to Python’s module search path:
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from src.inversion.liquid_ps import inverse_frequency_response
 
 #%% funcs -----------------------------------
@@ -121,7 +123,7 @@ def Find_closestfile_in_database(_df_database, _Depth, _Length, _IncAngl):
     min_angle_diff = length_filtered['angle_diff'].min()
     final_selection = length_filtered[length_filtered['angle_diff'] == min_angle_diff]
 
-    print(final_selection)
+    print("final_selection['filename'].iloc[0]", final_selection['filename'].iloc[0])
 
     # Take the first row if multiple matches
     df_closest_row = final_selection.iloc[0]
@@ -253,6 +255,7 @@ print('database_dir: ',database_dir)
 #  prolate spheroid dimensions of swimblader "a, b", 
 df_database = Extract_database_metadata(database_dir)
 
+print("df_database: ",df_database)
 #====================================
 #%% Test functions
 
@@ -285,7 +288,7 @@ Observation_point = np.array([0, 0, 0]) # Echosounder location
 # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 # Example: place N points (fish location) with no overlap in a prolate or oblate spheroid
 # |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
-N = 2
+N = 10
 a, b = 2.0, 0.6  # spheroid axes
 points = []
 min_dist = 0.1
@@ -363,23 +366,25 @@ points = []
 p = np.array([0, 0, - Average_school_Depth])
 points.append(p)
 
-p = np.array([0, 0, - Average_school_Depth - 0.1])
+p = np.array([0, 0, - Average_school_Depth - 0.25])
 points.append(p)
 
+p = np.array([0, 0, - Average_school_Depth - 0.50])
+points.append(p)
 
-# p = np.array([0, 0, - Average_school_Depth - 0.5])
-# points.append(p)
+p = np.array([0, 0, - Average_school_Depth - 0.6])
+points.append(p)
 
-# # p = np.array([0, 0, - Average_school_Depth - 0.6])
-# # points.append(p)
+p = np.array([0, 0, - Average_school_Depth - 0.7])
+points.append(p)
 
 points = np.array(points)
 print(points)
 
 
 # Orientation: ---------------------------------------------
-PHI = np.array([90.0, 90.0]) * np.pi/180
-THETA = np.array([0.0, 0.0]) * np.pi/180
+PHI = np.array([90.0, 90.0, 90.0, 90.0, 90.0]) * np.pi/180
+THETA = np.array([0.0, 0.0, 0.0, 0.0, 0.0]) * np.pi/180
 
 # Convert spherical to Cartesian coordinates
 x = np.sin(PHI) * np.cos(THETA)
@@ -409,7 +414,7 @@ for ii in range(0, len(points)):
     Length = 0.0 # m.  This can be changed to include distribution of ranges
 
     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
-    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[1]), Length, Incident_Angle_ii)
+    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
     
     L_fish = Length # m 
     [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
@@ -446,49 +451,49 @@ plt.show()
 
 #============================================================
 # ============    Plot Single Target   ======================
-database_dir = os.path.join(ParentDIR, 'model_results','model_backscatter_results/')
-print('database_dir: ',database_dir)
+# database_dir = os.path.join(ParentDIR, 'model_results','model_backscatter_results/')
+# print('database_dir: ',database_dir)
 
-# Create database info from csv files in database_dir. df_database has filename, target (fish) length, incident angle, depth,
-#  prolate spheroid dimensions of swimblader "a, b", 
-df_database = Extract_database_metadata(database_dir)
+# # Create database info from csv files in database_dir. df_database has filename, target (fish) length, incident angle, depth,
+# #  prolate spheroid dimensions of swimblader "a, b", 
+# df_database = Extract_database_metadata(database_dir)
 
-Length_vec = [0.30, 0.30, 0.1] # m.  This can be changed to include distribution of ranges
-point_ii = np.array([0,-50,0])
-Incident_Angle_vec = [90, 75, 90]
+# Length_vec = [0.30, 0.30, 0.1] # m.  This can be changed to include distribution of ranges
+# point_ii = np.array([0,-50,0])
+# Incident_Angle_vec = [90, 75, 90]
 
-Colors = [[0.0, 0.0, 0.0],
-          [1.0, 0.0, 0.0],
-          [0.0, 0.0, 1.0],
-          [0.5, 0.5, 0.5]
-          ]
+# Colors = [[0.0, 0.0, 0.0],
+#           [1.0, 0.0, 0.0],
+#           [0.0, 0.0, 1.0],
+#           [0.5, 0.5, 0.5]
+#           ]
 
-Fig = plt.figure(figsize=(10, 6))
-for jj in range(0, len(Length_vec)):
-    Length = Length_vec[jj] # m.  This can be changed to include distribution of ranges
-    point_ii = np.array([0,-50,0])
-    Incident_Angle_ii = Incident_Angle_vec[jj]
-    # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
-    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[1]), Length, Incident_Angle_ii)
-    print("------------------------------------------------")
-    print("target_dict['filename']:::", target_dict['filename'])
-    print("------------------------------------------------")
-    LABEL = rf"L={Length} m, $\theta={Incident_Angle_ii}^\circ$"
+# Fig = plt.figure(figsize=(10, 6))
+# for jj in range(0, len(Length_vec)):
+#     Length = Length_vec[jj] # m.  This can be changed to include distribution of ranges
+#     point_ii = np.array([0,-50,0])
+#     Incident_Angle_ii = Incident_Angle_vec[jj]
+#     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
+#     target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[1]), Length, Incident_Angle_ii)
+#     print("------------------------------------------------")
+#     print("target_dict['filename']:::", target_dict['filename'])
+#     print("------------------------------------------------")
+#     LABEL = rf"L={Length} m, $\theta={Incident_Angle_ii}^\circ$"
 
-    L_fish = Length # m 
-    [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
+#     L_fish = Length # m 
+#     [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
     
-    plt.plot(freq, TS_ii, color = Colors[jj],  linewidth = 1.5, label=LABEL)
-    plt.tick_params(axis='both', labelsize=14)  # increase y-axis tick label size
-    plt.xlabel('Frequency (kHz)', fontsize = 14)
-    plt.ylabel('TS (dB) $re\ 1\ m^2$', fontsize = 14)
-    plt.ylim([-71,-15])
-    plt.legend(fontsize=14)
+#     plt.plot(freq, TS_ii, color = Colors[jj],  linewidth = 1.5, label=LABEL)
+#     plt.tick_params(axis='both', labelsize=14)  # increase y-axis tick label size
+#     plt.xlabel('Frequency (kHz)', fontsize = 14)
+#     plt.ylabel('TS (dB) $re\ 1\ m^2$', fontsize = 14)
+#     plt.ylim([-71,-15])
+#     plt.legend(fontsize=14)
 
-plt.savefig("TS_vs_freq.png", dpi=300, bbox_inches='tight')  # PNG
-plt.savefig("TS_vs_freq.jpg", dpi=300, bbox_inches='tight')  # JPG
+# plt.savefig("TS_vs_freq.png", dpi=300, bbox_inches='tight')  # PNG
+# plt.savefig("TS_vs_freq.jpg", dpi=300, bbox_inches='tight')  # JPG
 
-plt.show()
+# plt.show()
 
 delta_hz = np.mean(freq[1:].values - freq[:-1].values) * 1000
 time, ifft = inverse_frequency_response(Total_p_TS.values, delta_hz)

@@ -280,17 +280,17 @@ Observation_point = np.array([0, 0, 0]) # Echosounder location
 
 # //////////////////////////////////////////////////////////////////////////////////////
 # Example: place N points (fish location) with no overlap in a prolate or oblate spheroid
-N = 2
+N = 10
 a, b = 2.0, 0.6  # spheroid axes
 points = []
 min_dist = 0.1
 Average_school_Depth = 50 # m
 
 # "Theta" is the angle of projected vector on XY plane and X axis
-theta_range = np.array([-0.1, 0.1])*np.pi/180
+theta_range = np.array([-30, 30])*np.pi/180
 
 # "Phi" is the angle of vector and Z axis
-phi_range = np.array([89.99, 90.01])*np.pi/180
+phi_range = np.array([60, 120])*np.pi/180
 
 
 # I. Create N points(x, y, z) with min_dist to avoid overlap:
@@ -307,22 +307,22 @@ points = np.array(points)
 print(points)
 
 # # Test case for two fish: ===========================
-points = []
-p = np.array([0, 0, - Average_school_Depth])
-points.append(p)
+# points = []
+# p = np.array([0, 0, - Average_school_Depth])
+# points.append(p)
 
-p = np.array([0, 0, - Average_school_Depth - 0.5])
-points.append(p)
+# p = np.array([0, 0, - Average_school_Depth - 0.5])
+# points.append(p)
 
 
-# # p = np.array([0, 0, - Average_school_Depth - 0.35])
-# # points.append(p)
+# # # p = np.array([0, 0, - Average_school_Depth - 0.35])
+# # # points.append(p)
 
-# # p = np.array([0, 0, - Average_school_Depth - 0.6])
-# # points.append(p)
+# # # p = np.array([0, 0, - Average_school_Depth - 0.6])
+# # # points.append(p)
 
-points = np.array(points)
-print(points)
+# points = np.array(points)
+# print(points)
 # # ====================================================
 
 
@@ -386,7 +386,7 @@ for ii in range(0, len(points)):
     Length = 0.3 # m.  This can be changed to include distribution of ranges
 
     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
-    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[1]), Length, Incident_Angle_ii)
+    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
     
     L_fish = Length # m 
     [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)

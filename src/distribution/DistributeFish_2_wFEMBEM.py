@@ -1,3 +1,10 @@
+'''
+To run, be in Prol_Spheroid_herring directory. for example 
+run cd /root/projects/Prol_Spheroid_herring/ 
+Then use:
+python -m src.distribution.DistributeFish_2_wFEMBEM
+to run the script
+'''
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -214,7 +221,7 @@ def plot_fish_school(_points, _orientations):
     ax = fig.add_subplot(111, projection='3d')
     ax.quiver(_points[:, 0], _points[:, 1], _points[:, 2],
             _orientations[:, 0], _orientations[:, 1], _orientations[:, 2],
-            length=0.3, normalize=True)
+            length=0.1, normalize=True)
 
     # Equal aspect ratio
     max_range = np.array([
@@ -231,7 +238,7 @@ def plot_fish_school(_points, _orientations):
     ax.set_ylim(mid_y - max_range, mid_y + max_range)
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
-    plt.show()    
+    # plt.show()    
 
 #%% Initialize Directories and Databases:
 
@@ -255,9 +262,9 @@ print('FEM_BEM_dir: ',FEM_BEM_dir)
 #  prolate spheroid dimensions of swimblader "a, b", 
 df_database = Extract_database_metadata(database_dir)
 
-from Func_FEMBEM import func_FEM_BEM
+from src.distribution.Func_FEMBEM import func_FEM_BEM
 
-FEM_BEM_files = ['FEM_BEM_II_FourTargets_TS_a1cm_b4mm_rho7p34_90deg_D1_0p1m_D2_0p2m_D3_0p3m.txt']
+FEM_BEM_files = ['FEM_BEM_II_FourTargets_TS_a1cm_b4mm_rho7p34_90deg_D1_0p1m_D2_0p25m_D3_z0p25m_x0p25m.txt']
 
 [f_bem, TS_bem] = func_FEM_BEM(FEM_BEM_dir, FEM_BEM_files[0])
 #====================================
@@ -373,11 +380,10 @@ points.append(p)
 p = np.array([0, 0, - Average_school_Depth -  0.1])
 points.append(p)
 
-
-p = np.array([0, 0, - Average_school_Depth - 0.2])
+p = np.array([0, 0, - Average_school_Depth - 0.25])
 points.append(p)
 
-p = np.array([0, 0, - Average_school_Depth - 0.3])
+p = np.array([0, -0.25, - Average_school_Depth - 0.25])
 points.append(p)
 
 points = np.array(points)
@@ -385,7 +391,7 @@ print(points)
 
 
 # Orientation: ---------------------------------------------
-PHI = np.array([90.0, 90.0, 90.0, 90.0 ]) * np.pi/180
+PHI = np.array([90.0, 90.0, 90.0, 90.0]) * np.pi/180
 THETA = np.array([0.0, 0.0, 0.0, 0.0]) * np.pi/180
 
 # Convert spherical to Cartesian coordinates
@@ -400,6 +406,8 @@ orientations /= np.linalg.norm(orientations, axis=1)[:, np.newaxis]  # normalize
 
 # Plot the fish school of N fish
 plot_fish_school(points, orientations)
+plt.savefig("Plot_"+os.path.splitext(FEM_BEM_files[0])[0]+".png", dpi=300, bbox_inches='tight')  # PNG
+plt.show() 
 
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
@@ -416,7 +424,7 @@ for ii in range(0, len(points)):
     Length = 0.0 # m.  This can be changed to include distribution of ranges
 
     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
-    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[1]), Length, Incident_Angle_ii)
+    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
     
     L_fish = Length # m 
     [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
@@ -463,6 +471,9 @@ plt.legend(
 
 # plt.plot(freq_scaled, TS_scaled, color = [0, 0, 0], dashes = [3,0], linewidth = 2)
 # plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
+plt.savefig("Multitarget_"+os.path.splitext(FEM_BEM_files[0])[0]+".png", dpi=300, bbox_inches='tight')  # PNG
+plt.savefig("Multitarget_"+os.path.splitext(FEM_BEM_files[0])[0]+".jpg", dpi=300, bbox_inches='tight')  # JPG
+
 plt.show()
 
 delta_hz = np.mean(freq[1:].values - freq[:-1].values) * 1000
