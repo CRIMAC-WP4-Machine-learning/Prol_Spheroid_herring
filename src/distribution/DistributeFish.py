@@ -1,3 +1,10 @@
+'''
+To run, be in Prol_Spheroid_herring directory. for example 
+run cd /root/projects/Prol_Spheroid_herring/ 
+Then use:
+python -m src.distribution.DistributeFish
+to run the script
+'''
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -6,6 +13,7 @@ import glob
 import pandas as pd
 import re
 from scipy.signal import savgol_filter
+from src.inversion.liquid_ps import inverse_frequency_response
 
 #%% funcs -----------------------------------
 def Get_Angle(_p0, _p1, _u_p1):
@@ -119,7 +127,7 @@ def Find_closestfile_in_database(_df_database, _Depth, _Length, _IncAngl):
     min_angle_diff = length_filtered['angle_diff'].min()
     final_selection = length_filtered[length_filtered['angle_diff'] == min_angle_diff]
 
-    print(final_selection)
+    print("final_selection['filename'].iloc[0]", final_selection['filename'].iloc[0])
 
     # Take the first row if multiple matches
     df_closest_row = final_selection.iloc[0]
@@ -191,7 +199,7 @@ def func_get_frq_TS_fbs_Dict(_Dir, _Inp_Dict, _Lfish):
                closest to _Lfish at a given Depth and tilt angle 
     '''
     df_csv = pd.read_csv(os.path.join(_Dir, _Inp_Dict['filename']))
-    print(df_csv.columns)
+    # print(df_csv.columns)
 
     # print(' type(df_csv): ', type(df_csv))
     freq_vec0 = df_csv['Freq_kHz']
@@ -242,7 +250,7 @@ ParentDIR = os.path.abspath(os.path.join(os.getcwd(), '..', '..'))
 print('Parent DIR: >>> ', ParentDIR)
 
 # Database Directory containing csv files with TS(f) and F_bs(f):
-database_dir = os.path.join(ParentDIR, 'model_results','model_backscatter_150Hz/')
+database_dir = os.path.join(ParentDIR, 'model_results','model_backscatter_results/')
 print('database_dir: ',database_dir)
 
 # Create database info from csv files in database_dir. df_database has filename, target (fish) length, incident angle, depth,
@@ -280,14 +288,14 @@ Observation_point = np.array([0, 0, 0]) # Echosounder location
 
 # //////////////////////////////////////////////////////////////////////////////////////
 # Example: place N points (fish location) with no overlap in a prolate or oblate spheroid
-N = 10
-a, b = 2.0, 0.6  # spheroid axes
+N = 150
+a, b = 2, 0.5  # spheroid axes
 points = []
 min_dist = 0.1
 Average_school_Depth = 50 # m
 
 # "Theta" is the angle of projected vector on XY plane and X axis
-theta_range = np.array([-30, 30])*np.pi/180
+theta_range = np.array([-20, 20])*np.pi/180
 
 # "Phi" is the angle of vector and Z axis
 phi_range = np.array([60, 120])*np.pi/180
@@ -366,7 +374,7 @@ z = np.cos(phi)
 orientations = np.stack((x, y, z), axis=1)  # shape (N, 3)
 orientations /= np.linalg.norm(orientations, axis=1)[:, np.newaxis]  # normalize
 
-print(orientations[0])
+# print(orientations[0])
 
 # Plot the fish school of N fish
 plot_fish_school(points, orientations)
@@ -381,9 +389,9 @@ for ii in range(0, len(points)):
 
     Incident_Angle_ii = Get_Angle(Observation_point, point_ii, orientations_ii)
 
-    print('Incident_Angle_ii: ', Incident_Angle_ii)
+    # print('Incident_Angle_ii: ', Incident_Angle_ii)
 
-    Length = 0.3 # m.  This can be changed to include distribution of ranges
+    Length = 0.12 # m.  This can be changed to include distribution of ranges
 
     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
     target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
@@ -391,7 +399,7 @@ for ii in range(0, len(points)):
     L_fish = Length # m 
     [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
     Distance = np.linalg.norm(Observation_point-point_ii)
-    print(Distance)
+    # print("Distance: ",Distance)
     p_far_ii = (f_bs_ii/(Distance*Distance)) * np.exp(1j*2*np.pi*(1000*freq/1500)*(2*Distance)) 
     p_far = p_far + p_far_ii
     # plt.plot(freq, 20*np.log10(np.abs(f_bs_ii)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
@@ -418,4 +426,13 @@ plt.xlabel(' Frequency (kHz)', fontsize = 12)
 
 # plt.plot(freq_scaled, TS_scaled, color = [0, 0, 0], dashes = [3,0], linewidth = 2)
 # plt.plot(freq_scaled, 20*np.log10(np.abs(scaled_f_bs)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
+plt.show()
+
+#==
+delta_hz = np.mean(freq[1:].values - freq[:-1].values) * 1000
+time, ifft = inverse_frequency_response(Total_p_TS.values, delta_hz)
+plt.plot(time[1:] * 1500 * 0.5, ifft[1:], linewidth = 1, label = 'iFFT')
+plt.xlabel('Distance [m]', fontsize=12)
+plt.legend()
+plt.xlim([0.0, 1.0])
 plt.show()

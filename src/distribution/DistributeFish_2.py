@@ -1,3 +1,11 @@
+'''
+To run, be in Prol_Spheroid_herring directory. for example 
+run cd /root/projects/Prol_Spheroid_herring/ 
+Then use:
+python -m src.distribution.DistributeFish_2
+to run the script
+'''
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
