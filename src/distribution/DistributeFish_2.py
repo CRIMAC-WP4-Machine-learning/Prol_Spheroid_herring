@@ -17,7 +17,7 @@ from scipy.signal import savgol_filter
 import sys
 # # The following manually adds /root/projects/Prol_Spheroid_herring/ to Python’s module search path:
 # sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
-from src.inversion.liquid_ps import inverse_frequency_response
+# from src.inversion.liquid_ps import inverse_frequency_response
 
 #%% funcs -----------------------------------
 def Get_Angle(_p0, _p1, _u_p1):
@@ -503,10 +503,10 @@ plt.show()
 
 # plt.show()
 
-delta_hz = np.mean(freq[1:].values - freq[:-1].values) * 1000
-time, ifft = inverse_frequency_response(Total_p_TS.values, delta_hz)
-plt.plot(time[1:] * 1500 * 0.5, ifft[1:], linewidth = 1, label = 'iFFT')
-plt.xlabel('Distance [m]', fontsize=12)
-plt.legend()
-plt.xlim([0.0, 1.0])
-plt.show()
+# delta_hz = np.mean(freq[1:].values - freq[:-1].values) * 1000
+# time, ifft = inverse_frequency_response(Total_p_TS.values, delta_hz)
+# plt.plot(time[1:] * 1500 * 0.5, ifft[1:], linewidth = 1, label = 'iFFT')
+# plt.xlabel('Distance [m]', fontsize=12)
+# plt.legend()
+# plt.xlim([0.0, 1.0])
+# plt.show()

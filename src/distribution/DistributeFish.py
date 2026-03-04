@@ -13,7 +13,7 @@ import glob
 import pandas as pd
 import re
 from scipy.signal import savgol_filter
-from src.inversion.liquid_ps import inverse_frequency_response
+# from src.inversion.liquid_ps import inverse_frequency_response
 
 #%% funcs -----------------------------------
 def Get_Angle(_p0, _p1, _u_p1):
@@ -235,7 +235,15 @@ def plot_fish_school(_points, _orientations):
     ax.set_ylim(mid_y - max_range, mid_y + max_range)
     ax.set_zlim(mid_z - max_range, mid_z + max_range)
 
-    plt.show()    
+    # Set view (orientation)
+    ax.view_init(elev=25, azim=-55)
+
+    # Add axis labels
+    ax.set_xlabel('X (m)')
+    ax.set_ylabel('Y (m)')
+    ax.set_zlabel('Z (m)')
+
+    # plt.show()    
 
 #%% Initialize Directories and Databases:
 
@@ -288,17 +296,19 @@ Observation_point = np.array([0, 0, 0]) # Echosounder location
 
 # //////////////////////////////////////////////////////////////////////////////////////
 # Example: place N points (fish location) with no overlap in a prolate or oblate spheroid
-N = 150
+Prefix = 'F18_'
+N = 100
 a, b = 2, 0.5  # spheroid axes
 points = []
 min_dist = 0.1
 Average_school_Depth = 50 # m
 
+L_fish = 0.3 # m
 # "Theta" is the angle of projected vector on XY plane and X axis
 theta_range = np.array([-20, 20])*np.pi/180
 
 # "Phi" is the angle of vector and Z axis
-phi_range = np.array([60, 120])*np.pi/180
+phi_range = np.array([60, 90])*np.pi/180
 
 
 # I. Create N points(x, y, z) with min_dist to avoid overlap:
@@ -338,32 +348,47 @@ print(points)
 # "Theta" is the angle of projected vector on XY plane and X axis
 # "Phi" is the angle of vector and Z axis
 
-# RANDOM distribution:   -----------------------------------------------
+# ------------------------------
+# uniforml distributions
+# ------------------------------
 # Generate arrays of theta and phi: 
 theta = np.random.uniform(theta_range[0], theta_range[1], size=len(points))
 phi = np.random.uniform(phi_range[0], phi_range[1], size=len(points))
 
-# # NORMAL distribution:   -----------------------------------------------
-# Parameters
-mu = np.mean(theta_range)       # mean
-sigma = 0.25*(theta_range[1]-theta_range[0])     # standard deviation
+# ------------------------------
+# Normal distributions
+# ------------------------------
+# Theta
+mu_theta = np.mean(theta_range)
+sigma_theta = 0.25*(theta_range[1]-theta_range[0])
+theta = np.random.normal(mu_theta, sigma_theta, N)
 
-theta = np.random.normal(mu, sigma, N)
+# Phi
+mu_phi = np.mean(phi_range)
+sigma_phi = 0.2*(phi_range[1]-phi_range[0])
+phi = np.random.normal(mu_phi, sigma_phi, N)
 
-# Plot histogram
-count, bins, ignored = plt.hist(180*theta/np.pi, bins=30, density=True, alpha=0.6, color='skyblue', edgecolor='black')
-plt.xlabel('$\\theta$',fontsize = 12)
-plt.show()
+# ------------------------------
+# Plot 1x2 histograms
+# ------------------------------
+fig, axs = plt.subplots(1, 2, figsize=(12, 5), gridspec_kw={'wspace':0.3})
 
-# Parameters
-mu = np.mean(phi_range)       # mean
-sigma = 0.25*(phi_range[1]-phi_range[0])     # standard deviation
+# Theta histogram
+axs[0].hist(180*theta/np.pi, bins=30, density=True, alpha=0.6,
+            color='skyblue', edgecolor='black')
+axs[0].set_xlabel(r'$\theta$ (deg)', fontsize=12)
+axs[0].set_ylabel('Probability density', fontsize=12)
+axs[0].set_xlim(-25, 25)  # match the physical range
 
-phi = np.random.normal(mu, sigma, N)
+# Phi histogram
+axs[1].hist(180*phi/np.pi, bins=30, density=True, alpha=0.6,
+            color='skyblue', edgecolor='black')
+axs[1].set_xlabel(r'$\phi$ (deg)', fontsize=12)
+axs[1].set_ylabel('Probability density', fontsize=12)
+axs[1].set_xlim(50, 130)  # match the physical range
 
-# Plot histogram
-count, bins, ignored = plt.hist(180*phi/np.pi, bins=30, density=True, alpha=0.6, color='skyblue', edgecolor='black')
-plt.xlabel(r'$\phi$',fontsize = 12)
+plt.tight_layout()
+plt.savefig("temp/"+Prefix+"FishSchool_AngleDistributions_fishL"+str(L_fish)+"_N_"+str(N)+"_Phi"+str(phi_range*180/np.pi)+".png", dpi=300, bbox_inches='tight')  # PNG
 plt.show()
 
 # Convert spherical to Cartesian coordinates
@@ -378,7 +403,9 @@ orientations /= np.linalg.norm(orientations, axis=1)[:, np.newaxis]  # normalize
 
 # Plot the fish school of N fish
 plot_fish_school(points, orientations)
-
+plt.title("L="+str(L_fish)+" m, $\phi$="+str(phi_range*180/np.pi))
+plt.savefig("temp/"+Prefix+"FishSchool_fishL"+str(L_fish)+"_N_"+str(N)+"_Phi"+str(phi_range*180/np.pi)+".png", dpi=300, bbox_inches='tight')  # PNG
+plt.show()    
 # \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 
 print('len(points): ', len(points))
@@ -391,12 +418,12 @@ for ii in range(0, len(points)):
 
     # print('Incident_Angle_ii: ', Incident_Angle_ii)
 
-    Length = 0.12 # m.  This can be changed to include distribution of ranges
+    # Length = 0.12 # m.  This can be changed to include distribution of ranges
 
     # Find the file in database (modeled .csv files) closest to the size of fish at "point_ii" with "orientation_ii"
-    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), Length, Incident_Angle_ii)
+    target_dict = Find_closestfile_in_database(df_database, np.abs(point_ii[2]), L_fish, Incident_Angle_ii)
     
-    L_fish = Length # m 
+    # L_fish = Length # m 
     [freq, TS_ii, f_bs_ii] = func_get_frq_TS_fbs_Dict(database_dir, target_dict, L_fish)
     Distance = np.linalg.norm(Observation_point-point_ii)
     # print("Distance: ",Distance)
@@ -404,20 +431,34 @@ for ii in range(0, len(points)):
     p_far = p_far + p_far_ii
     # plt.plot(freq, 20*np.log10(np.abs(f_bs_ii)), color = [1, 0, 0], dashes = [3,2], linewidth = 2)
 
+# Fig = plt.figure(figsize=(12,7))
 point_ii = points[0]
 Distance = np.linalg.norm(Observation_point-point_ii)
 Total_p_TS = 20*np.log10(np.abs(Distance*Distance * p_far))
 plt.plot(freq, Total_p_TS, color = [0, 0, 0], dashes = [3,0], linewidth = 1)
 
-window_L = int(len(Total_p_TS) / 5)
+window_L = 19 #int(len(Total_p_TS) / 20)
 # Ensure window_length is odd
 if window_L % 2 == 0:
     window_L += 1
 smoothed = savgol_filter(Total_p_TS, window_length=window_L, polyorder=3)
 plt.plot(freq, smoothed, color = [1, 0, 0], dashes = [3,0], linewidth = 3)
+# plt.xlim([5,255])
+
+# Create a DataFrame
+df = pd.DataFrame({
+    'freq': freq,
+    'smoothed': smoothed,
+    'sv': Total_p_TS
+})
+
+# Save to CSV
+df.to_csv("temp/"+Prefix+"sv_smothed_fishL"+str(L_fish)+"_N_"+str(N)+"_Phi"+str(phi_range*180/np.pi)+".csv", index=False)
 
 plt.xlabel(' Frequency (kHz)', fontsize = 12)
-
+plt.ylabel(' Sv ?', fontsize = 12)
+plt.title("L="+str(L_fish)+" m, $\phi$="+str(phi_range*180/np.pi))
+plt.savefig("temp/"+Prefix+"freq_Sv_smoothed_fishL"+str(L_fish)+"_N_"+str(N)+"_Phi"+str(phi_range*180/np.pi)+".png", dpi=300, bbox_inches='tight')  # PNG
 # target_dict = Find_closestfile_in_database(df_database, Depth, Length, IncAngl)
 # print('target_dict:>>>>>>> ',target_dict)
 
@@ -429,10 +470,10 @@ plt.xlabel(' Frequency (kHz)', fontsize = 12)
 plt.show()
 
 #==
-delta_hz = np.mean(freq[1:].values - freq[:-1].values) * 1000
-time, ifft = inverse_frequency_response(Total_p_TS.values, delta_hz)
-plt.plot(time[1:] * 1500 * 0.5, ifft[1:], linewidth = 1, label = 'iFFT')
-plt.xlabel('Distance [m]', fontsize=12)
-plt.legend()
-plt.xlim([0.0, 1.0])
-plt.show()
+# delta_hz = np.mean(freq[1:].values - freq[:-1].values) * 1000
+# time, ifft = inverse_frequency_response(Total_p_TS.values, delta_hz)
+# plt.plot(time[1:] * 1500 * 0.5, ifft[1:], linewidth = 1, label = 'iFFT')
+# plt.xlabel('Distance [m]', fontsize=12)
+# plt.legend()
+# plt.xlim([0.0, 1.0])
+# plt.show()
