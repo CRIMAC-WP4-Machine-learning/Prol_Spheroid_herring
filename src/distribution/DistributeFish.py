@@ -1,4 +1,7 @@
 '''
+Developped by Babak Khodabandeloo (IMR) and Yngve Heggelund (NORCE), funded by CRIMAC
+Last update March 2026
+
 To run, be in Prol_Spheroid_herring directory. for example 
 run cd /root/projects/Prol_Spheroid_herring/ 
 Then use:
