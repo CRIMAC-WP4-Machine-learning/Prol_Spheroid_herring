@@ -6,16 +6,16 @@ import os
 class UserDefinedSettings:
 
     def __init__(self):
-        self.prefix = 'Shrimp7d'        # just a name to identify the output files
+        self.prefix = 'SB'        # just a name to identify the output files
         # media properties
         self.ro_w = 1027            # the density of the surrounding media [kg/m^3]
-        self.ro_s = 1027 * 1.0357  # *1.0257  *1.0357           # the density of the spheroid [kg/m^3]
+        self.ro_s = 1027*1.0357  # *1.0257  *1.0357           # the density of the spheroid [kg/m^3]
         self.c_w = 1500            # the sound speed in the surrounding media [m/s]
-        self.c_s = 1500 * 1.0279   # * 1.044  *1.0279           # the sound speed in the spheroid [m/s]
+        self.c_s = 1500*1.0279   # * 1.044  *1.0279           # the sound speed in the spheroid [m/s]
 
         # geometrical properties
-        self.a = 0.019               # the length of the semi-major axis [m]
-        self.b = 0.0017             # the length of the semi-minor axis [m]
+        self.a = 0.01               # the length of the semi-major axis [m]
+        self.b = 0.0025             # the length of the semi-minor axis [m]
 
         # frequencies
         self.delta_f = 2000         # the distance between frequencies [Hz]
@@ -41,7 +41,7 @@ if __name__ == '__main__':
 
     os.environ['PATH'] += os.pathsep + os.path.abspath(r'C:\bin\mingw64\bin')
 
-    theta_i_deg_vec = [90, 60, 30]
+    theta_i_deg_vec = [90,60,30]
 
     solver = IterativeRefinement('LU')
 
